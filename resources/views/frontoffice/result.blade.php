@@ -1,124 +1,100 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-4 sm:py-8">
         <div class="max-w-6xl mx-auto px-4">
             <!-- Header -->
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mb-4">
-                    <i class="fas fa-chart-line text-white text-2xl"></i>
+            <div class="text-center mb-6 sm:mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mb-3 sm:mb-4">
+                    <i class="fas fa-chart-line text-white text-lg sm:text-2xl"></i>
                 </div>
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">Hasil Analisa Bisnis</h1>
-                <p class="text-gray-600">Insight dan rekomendasi berdasarkan data yang Anda berikan</p>
+                <h1 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">Hasil Analisa Bisnis</h1>
+                <p class="text-sm sm:text-base text-gray-600 px-4">Insight dan rekomendasi berdasarkan data yang Anda berikan</p>
             </div>
 
-            @if($session->gemini_response)
+            @if($diagnosis && $diagnosis->ai_response)
                 <!-- Status Success -->
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
+                <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden mb-6 sm:mb-8">
+                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-4 sm:p-6">
                         <div class="flex items-center text-white">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
-                                <i class="fas fa-check text-xl"></i>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 sm:mr-4">
+                                <i class="fas fa-check text-lg sm:text-xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold">Analisa Berhasil Diselesaikan</h2>
-                                <p class="text-green-100">Berikut adalah hasil analisa komprehensif untuk bisnis Anda</p>
+                                <h2 class="text-lg sm:text-xl font-semibold">Analisa Berhasil Diselesaikan</h2>
+                                <p class="text-sm sm:text-base text-green-100">Berikut adalah hasil analisa komprehensif untuk bisnis Anda</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Analysis Content -->
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div class="p-8 md:p-12">
+                <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-4 sm:p-8 md:p-12">
                         <!-- Analysis Header -->
-                        <div class="flex items-center mb-8 pb-6 border-b border-gray-200">
-                            <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                                <i class="fas fa-analytics text-white text-xl"></i>
+                        <div class="flex flex-col sm:flex-row sm:items-center mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200">
+                            <div class="flex items-center mb-4 sm:mb-0">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                                    <i class="fas fa-analytics text-white text-lg sm:text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-gray-800">Laporan Analisa</h3>
+                                    <p class="text-sm sm:text-base text-gray-500">
+                                        Dibuat pada {{ \Carbon\Carbon::parse($diagnosis->created_at)->format('d F Y, H:i') }} WIB
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-800">Laporan Analisa</h3>
-                                <p class="text-gray-500">
-                                    Dibuat pada {{ \Carbon\Carbon::parse($session->created_at)->format('d F Y, H:i') }} WIB
-                                </p>
-                            </div>
-                            <div class="ml-auto">
-                                <button onclick="printReport()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-300 mr-2">
-                                    <i class="fas fa-print mr-2"></i>Print
+                            <div class="flex space-x-2 sm:ml-auto">
+                                <button onclick="printReport()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-300 text-sm">
+                                    <i class="fas fa-print mr-1 sm:mr-2"></i><span class="hidden xs:inline">Print</span>
                                 </button>
-                                <button onclick="downloadPDF()" class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300">
-                                    <i class="fas fa-download mr-2"></i>Download PDF
+                                <button onclick="downloadPDF()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-sm">
+                                    <i class="fas fa-download mr-1 sm:mr-2"></i><span class="hidden xs:inline">PDF</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Formatted Analysis Content -->
-                        <div id="analysis-content" class="prose prose-lg max-w-none">
-                            {!! formatAnalysisContent($session->gemini_response) !!}
+                        <div id="analysis-content" class="prose prose-sm sm:prose-lg max-w-none">
+                            {!! formatAnalysisContent($diagnosis->ai_response) !!}
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="bg-gray-50 px-8 py-6 md:px-12">
-                        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                            <div class="flex items-center text-gray-600">
+                    <div class="bg-gray-50 px-4 py-4 sm:px-8 sm:py-6 md:px-12">
+                        <div class="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
+                            <div class="flex items-center text-gray-600 text-sm sm:text-base order-2 lg:order-1">
                                 <i class="fas fa-info-circle mr-2"></i>
-                                <span class="text-sm">Analisa ini dibuat berdasarkan informasi yang Anda berikan</span>
+                                <span>Analisa ini dibuat berdasarkan informasi yang Anda berikan</span>
                             </div>
-                            <div class="flex space-x-4">
-                                <a href="{{ route('front.form') }}" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">
+                            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 order-1 lg:order-2">
+                                <a href="{{ route('front.form') }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-center text-sm sm:text-base">
                                     <i class="fas fa-plus mr-2"></i>Analisa Baru
                                 </a>
-                                <button onclick="shareAnalysis()" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300">
-                                    <i class="fas fa-share-alt mr-2"></i>Analisa SWOT
-                                </button>
+                                <a href="{{ route('front.swot.form', $session->id) }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center text-sm sm:text-base">
+                                    <i class="fas fa-chart-bar mr-2"></i>Analisa Lebih Lanjut?
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Additional Resources -->
-                <div class="mt-8 grid md:grid-cols-2 gap-6">
-                    <!-- Tips Card -->
-{{--                    <div class="bg-white rounded-xl shadow-lg p-6">--}}
-{{--                        <div class="flex items-start">--}}
-{{--                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4 mt-1">--}}
-{{--                                <i class="fas fa-lightbulb text-yellow-600"></i>--}}
-{{--                            </div>--}}
-{{--                            <div>--}}
-{{--                                <h4 class="font-semibold text-gray-800 mb-3">Tips Implementasi</h4>--}}
-{{--                                <ul class="text-gray-600 text-sm space-y-2">--}}
-{{--                                    <li class="flex items-start">--}}
-{{--                                        <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>--}}
-{{--                                        <span>Prioritaskan rekomendasi berdasarkan dampak dan kemudahan implementasi</span>--}}
-{{--                                    </li>--}}
-{{--                                    <li class="flex items-start">--}}
-{{--                                        <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>--}}
-{{--                                        <span>Buat timeline yang realistis untuk setiap action item</span>--}}
-{{--                                    </li>--}}
-{{--                                    <li class="flex items-start">--}}
-{{--                                        <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>--}}
-{{--                                        <span>Monitor progress secara berkala dan adjust strategi jika diperlukan</span>--}}
-{{--                                    </li>--}}
-{{--                                </ul>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
-
+                <div class="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <!-- Feedback Card -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                         <div class="flex items-start">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4 mt-1">
-                                <i class="fas fa-comments text-blue-600"></i>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3 sm:mr-4 mt-1">
+                                <i class="fas fa-comments text-blue-600 text-sm sm:text-base"></i>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-semibold text-gray-800 mb-3">Feedback Analisa</h4>
-                                <p class="text-gray-600 text-sm mb-4">Bagaimana menurut Anda hasil analisa ini?</p>
-                                <div class="flex space-x-2">
-                                    <button onclick="giveFeedback('helpful')" class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-sm">
+                                <h4 class="font-semibold text-gray-800 mb-2 sm:mb-3 text-sm sm:text-base">Feedback Analisa</h4>
+                                <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">Bagaimana menurut Anda hasil analisa ini?</p>
+                                <div class="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-2">
+                                    <button onclick="giveFeedback('helpful')" class="px-3 sm:px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-xs sm:text-sm">
                                         <i class="fas fa-thumbs-up mr-1"></i>Sangat Membantu
                                     </button>
-                                    <button onclick="giveFeedback('improve')" class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors duration-300 text-sm">
+                                    <button onclick="giveFeedback('improve')" class="px-3 sm:px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors duration-300 text-xs sm:text-sm">
                                         <i class="fas fa-edit mr-1"></i>Perlu Diperbaiki
                                     </button>
                                 </div>
@@ -129,19 +105,19 @@
 
             @else
                 <!-- Processing State -->
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div class="p-8 md:p-12 text-center">
-                        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 sm:p-8 md:p-12 text-center">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                             <div class="animate-spin">
-                                <i class="fas fa-cog text-white text-2xl"></i>
+                                <i class="fas fa-cog text-white text-xl sm:text-2xl"></i>
                             </div>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Analisa Sedang Diproses</h2>
-                        <p class="text-gray-600 mb-8">Sistem kami sedang menganalisa data yang Anda berikan. Proses ini membutuhkan waktu beberapa menit.</p>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Analisa Sedang Diproses</h2>
+                        <p class="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 px-4">Sistem kami sedang menganalisa data yang Anda berikan. Proses ini membutuhkan waktu beberapa menit.</p>
 
                         <!-- Progress Animation -->
-                        <div class="max-w-md mx-auto mb-8">
-                            <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <div class="max-w-md mx-auto mb-6 sm:mb-8">
+                            <div class="flex justify-between text-xs sm:text-sm text-gray-500 mb-2">
                                 <span>Progress</span>
                                 <span id="progress-text">Memproses data...</span>
                             </div>
@@ -150,12 +126,12 @@
                             </div>
                         </div>
 
-                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg text-left max-w-2xl mx-auto mb-6">
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-r-lg text-left max-w-2xl mx-auto mb-4 sm:mb-6">
                             <div class="flex items-start">
-                                <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
+                                <i class="fas fa-info-circle text-blue-500 mr-2 sm:mr-3 mt-1"></i>
                                 <div>
-                                    <h4 class="font-semibold text-blue-800 mb-2">Yang Sedang Dilakukan:</h4>
-                                    <ul class="text-blue-700 text-sm space-y-1">
+                                    <h4 class="font-semibold text-blue-800 mb-2 text-sm sm:text-base">Yang Sedang Dilakukan:</h4>
+                                    <ul class="text-blue-700 text-xs sm:text-sm space-y-1">
                                         <li id="step1" class="opacity-50">• Menganalisa data bisnis Anda</li>
                                         <li id="step2" class="opacity-50">• Mengidentifikasi peluang dan tantangan</li>
                                         <li id="step3" class="opacity-50">• Menyusun rekomendasi strategis</li>
@@ -165,11 +141,11 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                            <button onclick="refreshPage()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">
+                        <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                            <button onclick="refreshPage()" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm sm:text-base">
                                 <i class="fas fa-sync-alt mr-2"></i>Refresh Halaman
                             </button>
-                            <a href="{{ route('dashboard') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300">
+                            <a href="{{ route('dashboard') }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300 text-center text-sm sm:text-base">
                                 <i class="fas fa-home mr-2"></i>Kembali ke Dashboard
                             </a>
                         </div>
@@ -222,28 +198,57 @@
         .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
             color: #1f2937;
             font-weight: 700;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
         }
 
-        .prose h1 { font-size: 2rem; }
-        .prose h2 { font-size: 1.5rem; }
-        .prose h3 { font-size: 1.25rem; }
+        .prose h1 { font-size: 1.5rem; }
+        .prose h2 { font-size: 1.25rem; }
+        .prose h3 { font-size: 1.125rem; }
+
+        @media (min-width: 640px) {
+            .prose h1 { font-size: 2rem; }
+            .prose h2 { font-size: 1.5rem; }
+            .prose h3 { font-size: 1.25rem; }
+        }
 
         .prose p {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             line-height: 1.75;
             color: #374151;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 640px) {
+            .prose p {
+                margin-bottom: 1.5rem;
+                font-size: 1rem;
+            }
         }
 
         .prose ul, .prose ol {
-            margin: 1.5rem 0;
-            padding-left: 1.5rem;
+            margin: 1rem 0;
+            padding-left: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .prose ul, .prose ol {
+                margin: 1.5rem 0;
+                padding-left: 1.5rem;
+            }
         }
 
         .prose li {
-            margin: 0.5rem 0;
+            margin: 0.25rem 0;
             color: #374151;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 640px) {
+            .prose li {
+                margin: 0.5rem 0;
+                font-size: 1rem;
+            }
         }
 
         .prose strong {
@@ -254,34 +259,69 @@
         .prose blockquote {
             border-left: 4px solid #3b82f6;
             background: #eff6ff;
-            padding: 1rem 1.5rem;
-            margin: 2rem 0;
+            padding: 0.75rem 1rem;
+            margin: 1.5rem 0;
             border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        @media (min-width: 640px) {
+            .prose blockquote {
+                padding: 1rem 1.5rem;
+                margin: 2rem 0;
+            }
         }
 
         .prose code {
             background: #f3f4f6;
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             color: #1f2937;
+        }
+
+        @media (min-width: 640px) {
+            .prose code {
+                font-size: 0.875rem;
+            }
         }
 
         .prose table {
             width: 100%;
             border-collapse: collapse;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 640px) {
+            .prose table {
+                margin: 2rem 0;
+                font-size: 1rem;
+            }
         }
 
         .prose th, .prose td {
             border: 1px solid #d1d5db;
-            padding: 0.75rem;
+            padding: 0.5rem;
             text-align: left;
+        }
+
+        @media (min-width: 640px) {
+            .prose th, .prose td {
+                padding: 0.75rem;
+            }
         }
 
         .prose th {
             background: #f9fafb;
             font-weight: 600;
+        }
+
+        /* Responsive breakpoint for extra small screens */
+        @media (min-width: 475px) {
+            .xs\:inline { display: inline !important; }
+            .xs\:flex-row { flex-direction: row !important; }
+            .xs\:space-y-0 > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+            .xs\:space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem !important; }
         }
 
         /* Print styles */

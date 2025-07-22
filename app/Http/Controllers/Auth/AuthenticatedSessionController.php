@@ -22,14 +22,30 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $request->authenticate();
+        $request->validate([
+            'phone_number' => ['required', 'string'],
+            'password' => ['required', 'string'],
+        ]);
 
-        $request->session()->regenerate();
+        // Debugging: Cek User & Password
+        $user = \App\Models\User::where('phone_number', $request->phone_number)->first();
+        if(!$user) {
+            return back()->withErrors(['phone_number' => 'Nomor HP tidak terdaftar'])->withInput();
+        }
+        if (!\Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['phone_number' => 'Password salah'])->withInput();
+        }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if (Auth::attempt(['phone_number' => $request->phone_number, 'password' => $request->password], $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard'));
+        }
+
+        return back()->withErrors(['phone_number' => 'Login gagal'])->withInput($request->only('phone_number'));
     }
+
 
     /**
      * Destroy an authenticated session.

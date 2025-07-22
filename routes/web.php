@@ -30,6 +30,13 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
     Route::get('result/{session}', [FormController::class, 'showResult'])->name('front.result');
 });
 
+// Step 2: Analisa SWOT
+Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    Route::get('swot/{session}', [FormController::class, 'showSwotForm'])->name('front.swot.form');
+    Route::post('swot/{session}', [FormController::class, 'submitSwot'])->name('front.swot.submit');
+});
+
+
 // Backoffice - lihat semua session
 Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
     Route::get('sessions', [\App\Http\Controllers\Backoffice\SessionController::class, 'index'])->name('backoffice.sessions');

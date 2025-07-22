@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 
 class QuestionController extends Controller
 {
+//    testing git
     public function index()
     {
         $questions = Question::orderBy('order')->get();

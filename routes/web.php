@@ -44,15 +44,16 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
 });
 
 
-// Backoffice - lihat semua session
 Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
     Route::get('sessions', [\App\Http\Controllers\Backoffice\SessionController::class, 'index'])->name('backoffice.sessions');
+    Route::get('sessions/{session}', [\App\Http\Controllers\Backoffice\SessionController::class, 'show'])->name('backoffice.sessions.show');
 });
 
-// Frontoffice - history session user sendiri
+
 Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
-    Route::get('history', [\App\Http\Controllers\Frontoffice\FormController::class, 'history'])->name('front.history');
+    Route::get('history', [FormController::class, 'history'])->name('front.history');
 });
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/frontoffice', [FrontofficeController::class, 'index'])->name('frontoffice.dashboard');

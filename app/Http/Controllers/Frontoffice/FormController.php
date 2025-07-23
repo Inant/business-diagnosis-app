@@ -255,7 +255,7 @@ EOP;
             ->where('step', 'content_plan')->first();
 
         // Jika sudah pernah generate, tampilkan hasil
-        if ($contentPlan && $contentPlan->ai_response_json) {
+        if ($contentPlan && $contentPlan->ai_response) {
             return view('frontoffice.content_plan_result', compact('session', 'contentPlan'));
         }
 
@@ -402,7 +402,19 @@ EOP;
         return null;
     }
 
+    public function history()
+    {
+        $user = auth()->user();
+        // Ambil semua sesi analisa milik user (urutkan terbaru)
+        $sessions = UserSession::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->paginate(10);
 
+        // Ambil ai_responses untuk setiap session sekaligus (diagnosis, swot, content_plan)
+        $sessions->load(['aiResponses']);
+
+        return view('frontoffice.history', compact('sessions'));
+    }
 
 
 }

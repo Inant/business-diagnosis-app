@@ -1,5 +1,4 @@
 <nav x-data="{ open: false }" class="bg-gray-900 text-white shadow mb-6">
-    <!-- Primary Navigation Menu -->
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <!-- Logo dan Menu -->
@@ -13,6 +12,11 @@
                         @else
                             <a href="{{ route('front.form') }}" class="hover:text-blue-300">Isi Form Analisa</a>
                             <a href="{{ route('front.history') }}" class="hover:text-blue-300">Riwayat Analisa Saya</a>
+
+                            <!-- MENU TAMBAHAN (Frontoffice Only) -->
+                            <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="hover:text-blue-300">Generator Foto Product</a>
+                            <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="hover:text-blue-300">Generator Social Media Post</a>
+                            <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="hover:text-blue-300">Prompt Generator VEO3</a>
                         @endif
                     </div>
                 @endauth
@@ -56,6 +60,11 @@
                 @else
                     <a href="{{ route('front.form') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Analisa</a>
                     <a href="{{ route('front.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Riwayat Analisa Saya</a>
+
+                    <!-- MENU TAMBAHAN (Frontoffice Only - MOBILE) -->
+                    <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Generator Foto Product</a>
+                    <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Generator Social Media Post</a>
+                    <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Prompt Generator VEO3</a>
                 @endif
                 <div class="border-t border-gray-700 my-2"></div>
                 <div class="py-2 px-2 text-sm">Hi, {{ auth()->user()->name }}</div>

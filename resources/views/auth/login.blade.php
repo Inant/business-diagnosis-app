@@ -32,22 +32,22 @@
             </label>
         </div>
 
-        <div class="flex items-center justify-between mt-4">
-            <div>
+        <div class="flex items-center justify-between mt-4 flex-col gap-2 sm:flex-row sm:gap-0">
+            <div class="w-full sm:w-auto text-center sm:text-left">
                 @if (Route::has('register'))
                     <a class="underline text-sm text-blue-600 hover:text-blue-900 rounded-md focus:outline-none" href="{{ route('register') }}">
                         {{ __('Belum punya akun? Register') }}
                     </a>
                 @endif
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 @if (Route::has('password.request'))
                     <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
                         {{ __('Lupa password?') }}
                     </a>
                 @endif
 
-                <x-primary-button class="ms-3">
+                <x-primary-button class="ms-0 sm:ms-3 w-full sm:w-auto">
                     {{ __('Login') }}
                 </x-primary-button>
             </div>

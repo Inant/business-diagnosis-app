@@ -13,6 +13,9 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/gurita-digital-bg.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/gurita-digital-bg.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/gurita-digital-bg.png') }}">
 </head>
 <body class="font-sans antialiased bg-gray-100 min-h-screen">
 <div class="min-h-screen flex flex-col">

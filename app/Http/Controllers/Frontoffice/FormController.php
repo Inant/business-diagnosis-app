@@ -98,6 +98,8 @@ class FormController extends Controller
         $contentString = implode("\n\n", $list);
 
         $prompt = <<<EOP
+#perkenalkan diri anda adalah gurita AI yang dibuat oleh the boss whisperer seorang konsultan bisnis. anda telah diajari selama 5 tahun berbagai bisnis sehingga sudah handal.
+
 # PERAN
 Kamu adalah seorang Konsultan Bisnis Strategis dari firma top dunia (seperti McKinsey atau BCG). Kamu sangat tajam, analitis, dan mampu melihat pola yang tidak dilihat orang lain. Tugasmu bukan memberi solusi, tetapi memberikan diagnosis yang akurat dan membuka pikiran.
 
@@ -125,6 +127,9 @@ $contentString
 * Gunakan heading (###) untuk setiap bagian: `### Diagnosis Awal`, `### Masalah Inti Anda`, dan `### Sebuah Pertanyaan untuk Anda`.
 * Gaya bahasa harus lugas, profesional, dan to the point. Hindari basa-basi.
 * **PENTING:** Jangan berikan solusi atau rekomendasi marketing apa pun di tahap ini. Fokus 100% pada diagnosis masalah.
+
+#tambahkan copywriting mengenai seminar saya https://www.guritadigital.com/tiktok-mastery-with-ai/
+yang akan mengajari AI sebagai sparing partner dalam membuat konten, iklan, copywriting bahkan skript untuk membuat live. Di akhir seminar Anda juga akan diperkenalkan sebuah whatsapp asisten yang bisa menjadi CS mulai memilih barang sampai transaksi selesai dengan AI.
 EOP;
 
         return $prompt;
@@ -205,6 +210,8 @@ EOP;
         $jawabanStr = implode("\n", $jawaban);
 
         return <<<EOP
+#perkenalkan diri anda adalah gurita AI yang dibuat oleh the boss whisperer seorang konsultan bisnis. anda telah diajari selama 5 tahun berbagai bisnis sehingga sudah handal.
+
 # PERAN
 Kamu adalah seorang Konsultan Pemasaran Digital yang berpengalaman dan kreatif. Kamu adalah seorang ahli strategi sekaligus praktisi. Tugasmu adalah mengubah diagnosis masalah menjadi sebuah rencana aksi yang jelas, praktis, dan menginspirasi.
 
@@ -235,8 +242,167 @@ Berdasarkan keseluruhan konteks di atas (Bagian A dan B), buatkan sebuah **Peta 
 * Gunakan heading (###) untuk setiap bagian analisis (### Analisis SWOT, ### Unique Selling Proposition Anda, dst.).
 * Gaya bahasa harus positif, memotivasi, dan penuh dengan saran yang bisa ditindaklanjuti.
 * Akhiri seluruh laporan dengan satu paragraf penutup berjudul `### Langkah Pertama Anda`, yang menyarankan satu tindakan paling penting yang harus segera dilakukan.
+
+#tambahkan copywriting mengenai seminar saya https://www.guritadigital.com/tiktok-mastery-with-ai/
+yang akan mengajari AI sebagai sparing partner dalam membuat konten, iklan, copywriting bahkan skript untuk membuat live. Di akhir seminar Anda juga akan diperkenalkan sebuah whatsapp asisten yang bisa menjadi CS mulai memilih barang sampai transaksi selesai dengan AI.
 EOP;
     }
+
+    public function showContentPlanForm($session_id)
+    {
+        $session = UserSession::findOrFail($session_id);
+        $contentPlan = AiResponse::where('user_session_id', $session_id)
+            ->where('step', 'content_plan')->first();
+
+        // Jika sudah pernah generate, tampilkan hasil
+        if ($contentPlan && $contentPlan->ai_response_json) {
+            return view('frontoffice.content_plan_result', compact('session', 'contentPlan'));
+        }
+
+        // Atau tampilkan form pilih durasi (default 30 hari)
+        return view('frontoffice.content_plan_form', compact('session'));
+    }
+
+    public function generateContentPlan(Request $request, $session_id)
+    {
+        $session = UserSession::findOrFail($session_id);
+
+        $days = $request->input('days', 7);
+
+        // Ambil semua data yang dibutuhkan:
+        $answers = UserAnswer::where('user_session_id', $session_id)->pluck('answer', 'question_id')->toArray();
+        $questions = Question::orderBy('order')->get();
+
+        // Masalah inti, SWOT, USP, Persona dari ai_responses SWOT step
+        $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
+        $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
+
+        // Extract output (misal: regex atau parsing sederhana) untuk USP dan Persona jika ingin lebih advance,
+        // atau langsung lampirkan output response SWOT untuk bagian SWOT/USP/Persona.
+
+        $prompt = $this->generateContentPlanPrompt(
+            $questions, $answers,
+            $diagnosis?->ai_response,
+            $swot?->ai_response,
+            $days
+        );
+
+        $geminiResponse = $this->sendToGemini($prompt);
+
+        // **Extract json jika perlu:** (pastikan Gemini benar-benar mengirim JSON!)
+        $jsonStart = strpos($geminiResponse, '[');
+
+        $jsonString = $this->extractJsonFromResponse($geminiResponse);
+
+        // Simpan di ai_responses step content_plan
+        $contentPlan = AiResponse::create([
+            'user_session_id' => $session_id,
+            'step' => 'content_plan',
+            'prompt' => $prompt,
+            'ai_response' => $jsonString
+//            'ai_response_json' => $jsonString,
+        ]);
+
+        return view('frontoffice.content_plan_result', compact('session', 'contentPlan'));
+    }
+
+    protected function generateContentPlanPrompt($questions, $answers, $diagnosis, $swot, $days)
+    {
+        // Jawaban user untuk 8 pertanyaan awal (bagian A)
+        $jawabanList = [];
+        foreach ($questions as $i => $q) {
+            $jawabanList[] = ($i+1) . '. ' . $q->title . ': ' . ($answers[$q->id] ?? '-');
+        }
+        $jawabanStr = implode("\n", $jawabanList);
+
+        // **ASSET MARKETING**: isi dengan output dari diagnosis/SWOT
+        $swotStr = $swot ?: '-';
+        $diagnosisStr = $diagnosis ?: '-';
+
+        // Durasi konten
+        $durasi = $days;
+
+        return <<<EOP
+# PERAN
+Kamu adalah seorang Social Media Content Strategist dan Creative Copywriter yang sangat terstruktur. Kamu ahli dalam mengubah strategi menjadi ide konten harian yang lengkap dengan script, hook, dan CTA.
+
+# KONTEKS
+Kamu akan membuat rencana konten untuk sebuah bisnis. Berikut adalah semua data strategis yang kamu butuhkan:
+
+**BAGIAN A: PROFIL BISNIS LENGKAP**
+$jawabanStr
+
+**BAGIAN B: ASET MARKETING YANG TELAH DISIMPAN**
+* **Masalah Inti Bisnis:** $diagnosisStr
+* **Analisis SWOT:** $swotStr
+
+**BAGIAN C: PERMINTAAN KONTEN DINAMIS**
+* **Durasi Rencana Konten:** Buatkan rencana untuk **$durasi** hari.
+
+# TUGAS
+1.  Buatkan **Rencana Kalender Konten** untuk durasi yang diminta pada **Bagian C**.
+2.  Setiap hari harus memiliki satu ide konten yang unik, relevan dengan Pilar Konten (Edukasi, Interaksi, Inspirasi), dan berbicara langsung kepada Persona Pembeli.
+3.  **PENTING:** Untuk setiap ide konten, pecah informasinya ke dalam **struktur field** berikut:
+    * `Hari_ke`: (Nomor urut hari)
+    * `Pilar_Konten`: (Pilih salah satu: Edukasi, Interaksi, atau Inspirasi)
+    * `Judul_Konten`: (Judul yang menarik dan ringkas)
+    * `Hook`: (Satu kalimat pembuka yang sangat kuat untuk 1-3 detik pertama video/post)
+    * `Script_Poin_Utama`: (Isi konten dalam 3-4 poin ringkas)
+    * `Call_to_Action_(CTA)`: (Ajakan bertindak yang spesifik, misal: "Komen di bawah", "Klik link di bio", "Share ke temanmu")
+    * `Rekomendasi_Format`: (Saran format, misal: Video Reels, Carousel Instagram, TikTok Story, Website Blog Post)
+Prioritaskan konten dari pilar Edukasi dan Inspirasi. Buat penyebutan produk secara halus dan tidak langsung.
+
+# FORMAT & GAYA
+* **WAJIB:** Sajikan seluruh output dalam format **JSON (JavaScript Object Notation)** yang benar-benar valid. Buat sebuah array (daftar) di mana setiap objek di dalamnya adalah satu hari dari rencana konten, dengan key yang sesuai dengan nama field yang diminta di atas (`Hari_ke`, `Pilar_Konten`, dll).
+* **AWALI** output langsung dengan tanda kurung siku `[` dan **AKHIRI** dengan kurung siku penutup `]`, tanpa teks apa pun di luar array.
+* Setiap field string **wajib** menggunakan tanda kutip dua `"` (double quotes).
+* **JANGAN** menambahkan teks, penjelasan, catatan, komentar, markdown (seperti ```json), atau karakter lain di luar array JSON.
+* **JANGAN** memakai trailing comma (koma di akhir array/objek).
+* Jika ada karakter khusus di dalam string (misal tanda kutip di dalam value), gunakan escape karakter sesuai format JSON (`\"`).
+* Format JSON ini akan memastikan aplikasi Anda dapat dengan mudah mem-parsing data dan menampilkannya di field yang sudah Anda siapkan.
+
+* **Contoh format output JSON untuk 2 hari:**
+```json
+[
+  {
+    "Hari_ke": 1,
+    "Pilar_Konten": "",
+    "Judul_Konten": "",
+    "Hook": "",
+    "Script_Poin_Utama": [],
+    "Call_to_Action_(CTA)": "",
+    "Rekomendasi_Format": ""
+  },
+  {
+    "Hari_ke": 2,
+    "Pilar_Konten": "",
+    "Judul_Konten": "",
+    "Hook": "",
+    "Script_Poin_Utama": [],
+    "Call_to_Action_(CTA)": "",
+    "Rekomendasi_Format": ""
+  }
+]
+EOP;
+    }
+
+    protected function extractJsonFromResponse($responseText)
+    {
+        // Hilangkan ```json di awal dan ``` di akhir
+        $responseText = trim($responseText);
+        $responseText = preg_replace('/^```json\s*/', '', $responseText); // buang di awal
+        $responseText = preg_replace('/```$/', '', $responseText); // buang di akhir
+
+        // Cari blok array JSON pertama
+        $jsonStart = strpos($responseText, '[');
+        $jsonEnd = strrpos($responseText, ']');
+        if ($jsonStart !== false && $jsonEnd !== false) {
+            return substr($responseText, $jsonStart, $jsonEnd - $jsonStart + 1);
+        }
+        return null;
+    }
+
+
 
 
 }

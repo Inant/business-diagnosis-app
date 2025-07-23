@@ -13,18 +13,20 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/gurita-digital-bg.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/gurita-digital-bg.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/gurita-digital-bg.png') }}">
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
-            </div>
+    <div class="min-h-screen flex flex-col justify-center items-center pt-4 sm:pt-0 bg-gray-100">
+        <div class="mb-4 w-full flex justify-center">
+            <a href="/" class="block w-full max-w-[160px] sm:max-w-[100px]">
+                <x-application-logo class="w-full h-auto mx-auto" />
+            </a>
         </div>
+        <div class="w-full max-w-xs sm:max-w-md mt-0 px-4 sm:px-6 py-6 bg-white shadow-md overflow-hidden rounded-lg">
+            {{ $slot }}
+        </div>
+    </div>
     </body>
 </html>

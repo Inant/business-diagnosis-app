@@ -24,6 +24,7 @@ Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
     Route::resource('questions', QuestionController::class);
 });
 
+//analisa awal
 Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
     Route::get('form', [FormController::class, 'showForm'])->name('front.form');
     Route::post('form', [FormController::class, 'submitForm'])->name('front.form.submit');
@@ -34,6 +35,12 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
 Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
     Route::get('swot/{session}', [FormController::class, 'showSwotForm'])->name('front.swot.form');
     Route::post('swot/{session}', [FormController::class, 'submitSwot'])->name('front.swot.submit');
+});
+
+//konten generator
+Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    Route::get('content-plan/{session}', [FormController::class, 'showContentPlanForm'])->name('front.content.form');
+    Route::post('content-plan/{session}', [FormController::class, 'generateContentPlan'])->name('front.content.generate');
 });
 
 

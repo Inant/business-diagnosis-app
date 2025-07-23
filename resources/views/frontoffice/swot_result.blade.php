@@ -70,9 +70,10 @@
                             <a href="{{ route('front.result', $session->id) }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg font-semibold hover:from-gray-600 hover:to-gray-700 transition-all duration-300 text-center text-sm sm:text-base">
                                 <i class="fas fa-arrow-left mr-2"></i>Kembali ke Hasil Awal
                             </a>
-                            <button onclick="createContent()" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 text-center text-sm sm:text-base">
+                            <a href="{{ route('front.content.form', $session->id) }}"
+                               class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 text-center text-sm sm:text-base">
                                 <i class="fas fa-magic mr-2"></i>Buat Konten
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -116,9 +117,11 @@
                             <h4 class="font-semibold text-gray-800 mb-2 sm:mb-3 text-sm sm:text-base">Langkah Selanjutnya</h4>
                             <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">Siap untuk mengimplementasikan strategi SWOT Anda?</p>
                             <div class="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-2">
-                                <button onclick="createContent()" class="px-3 sm:px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-xs sm:text-sm">
+                                <a href="{{ route('front.content.form', $session->id) }}"
+                                   class="px-3 sm:px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-xs sm:text-sm">
                                     <i class="fas fa-magic mr-1"></i>Buat Konten Marketing
-                                </button>
+                                </a>
+
                                 <button onclick="giveFeedback('swot')" class="px-3 sm:px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors duration-300 text-xs sm:text-sm">
                                     <i class="fas fa-star mr-1"></i>Berikan Rating
                                 </button>

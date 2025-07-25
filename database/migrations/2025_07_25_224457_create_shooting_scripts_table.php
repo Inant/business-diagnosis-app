@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('content_idea_id');
             $table->unsignedBigInteger('user_session_id');
             $table->string('gaya_pembawaan');
-            $table->integer('target_durasi');
+            $table->string('target_durasi');
             $table->string('penyebutan_audiens');
             $table->text('script_json'); // hasil JSON script
             $table->text('raw_ai_response')->nullable(); // jika ingin simpan raw

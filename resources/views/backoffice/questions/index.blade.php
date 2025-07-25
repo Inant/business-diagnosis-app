@@ -42,6 +42,7 @@
                     <th class="py-3 px-4 sm:px-6 font-semibold">Order</th>
                     <th class="py-3 px-4 sm:px-6 font-semibold">Title</th>
                     <th class="py-3 px-4 sm:px-6 font-semibold">Pertanyaan</th>
+                    <th class="py-3 px-4 sm:px-6 font-semibold">Kategori</th>
                     <th class="py-3 px-4 sm:px-6 font-semibold">Status</th>
                     <th class="py-3 px-4 sm:px-6 font-semibold text-center">Aksi</th>
                 </tr>
@@ -52,6 +53,7 @@
                         <td class="py-3 px-4 sm:px-6">{{ $q->order }}</td>
                         <td class="py-3 px-4 sm:px-6">{{ $q->title }}</td>
                         <td class="py-3 px-4 sm:px-6">{{ $q->question }}</td>
+                        <td class="py-3 px-4 sm:px-6">{{ $q->category == '1' ? 'Kategori 1' : 'Kategori 2' }}</td>
                         <td class="py-3 px-4 sm:px-6">
                         <span class="inline-block px-2 py-1 rounded-full text-xs font-medium
                             {{ $q->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">

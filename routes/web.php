@@ -43,6 +43,12 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
     Route::post('content-plan/{session}', [FormController::class, 'generateContentPlan'])->name('front.content.generate');
 });
 
+//shooting script
+Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    Route::get('shooting-script/{contentIdea}', [FormController::class, 'showShootingScriptForm'])->name('front.shooting.form');
+    Route::post('shooting-script/{contentIdea}', [FormController::class, 'generateShootingScript'])->name('front.shooting.generate');
+});
+
 
 Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
     Route::get('sessions', [\App\Http\Controllers\Backoffice\SessionController::class, 'index'])->name('backoffice.sessions');

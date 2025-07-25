@@ -12,7 +12,7 @@ class QuestionController extends Controller
 //    testing git
     public function index()
     {
-        $questions = Question::orderBy('order')->get();
+        $questions = Question::orderBy('category')->orderBy('order')->get();
         return view('backoffice.questions.index', compact('questions'));
     }
 
@@ -27,6 +27,7 @@ class QuestionController extends Controller
             'title' => 'required|string|max:255',
             'question' => 'required|string',
             'order' => 'required|integer',
+            'category' => 'required',
             'is_active' => 'boolean'
         ]);
 
@@ -35,6 +36,7 @@ class QuestionController extends Controller
             'question' => $request->question,
             'slug' => Str::slug($request->title) . '-' . uniqid(),
             'order' => $request->order,
+            'category' => $request->category,
             'is_active' => $request->is_active ? 1 : 0,
         ]);
         return redirect()->route('questions.index')->with('success', 'Pertanyaan berhasil ditambahkan.');
@@ -51,6 +53,7 @@ class QuestionController extends Controller
             'title' => 'required|string|max:255',
             'question' => 'required|string',
             'order' => 'required|integer',
+            'category' => 'required',
             'is_active' => 'boolean'
         ]);
         $question->update([
@@ -58,6 +61,7 @@ class QuestionController extends Controller
             'question' => $request->question,
             'slug' => Str::slug($request->title) . '-' . uniqid(),
             'order' => $request->order,
+            'category' => $request->category,
             'is_active' => $request->is_active ? 1 : 0,
         ]);
         return redirect()->route('questions.index')->with('success', 'Pertanyaan berhasil diupdate.');

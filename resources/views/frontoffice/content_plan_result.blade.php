@@ -13,239 +13,199 @@
             </div>
 
             @php
-                // Ubah JSON menjadi array
-                $konten = json_decode($contentPlan->ai_response, true);
+                $pilarCounts = $contentIdeas->groupBy('pilar_konten')->map->count();
+                $formatCounts = $contentIdeas->groupBy('rekomendasi_format')->map->count();
             @endphp
 
-            @if(is_array($konten))
                 <!-- Statistics Overview -->
-                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-chart-bar mr-2 text-purple-500"></i>
-                        Ringkasan Kalender Konten
-                    </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        @php
-                            $totalDays = count($konten);
-                            $pilarCounts = array_count_values(array_column($konten, 'Pilar_Konten'));
-                            $formatCounts = array_count_values(array_column($konten, 'Rekomendasi_Format'));
-                        @endphp
-                        <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
-                            <div class="text-2xl font-bold text-purple-600">{{ $totalDays }}</div>
-                            <div class="text-sm text-gray-600">Total Konten</div>
-                        </div>
-                        <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
-                            <div class="text-2xl font-bold text-blue-600">{{ $pilarCounts['Edukasi'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600">Konten Edukasi</div>
-                        </div>
-                        <div class="text-center p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl">
-                            <div class="text-2xl font-bold text-pink-600">{{ $pilarCounts['Inspirasi'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600">Konten Inspirasi</div>
-                        </div>
-                        <div class="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
-                            <div class="text-2xl font-bold text-green-600">{{ $pilarCounts['Interaksi'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600">Konten Interaksi</div>
-                        </div>
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-chart-bar mr-2 text-purple-500"></i>
+                    Ringkasan Kalender Konten
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
+                        <div class="text-2xl font-bold text-purple-600">{{ $contentIdeas->count() }}</div>
+                        <div class="text-sm text-gray-600">Total Konten</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
+                        <div class="text-2xl font-bold text-blue-600">{{ $pilarCounts['Edukasi'] ?? 0 }}</div>
+                        <div class="text-sm text-gray-600">Konten Edukasi</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl">
+                        <div class="text-2xl font-bold text-pink-600">{{ $pilarCounts['Inspirasi'] ?? 0 }}</div>
+                        <div class="text-sm text-gray-600">Konten Inspirasi</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
+                        <div class="text-2xl font-bold text-green-600">{{ $pilarCounts['Interaksi'] ?? 0 }}</div>
+                        <div class="text-sm text-gray-600">Konten Interaksi</div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Content Calendar Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-                    @foreach($konten as $index => $item)
-                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 h-full flex flex-col">
-                            <!-- Card Header -->
-                            <div class="relative p-6 pb-4
-                            @if($item['Pilar_Konten'] === 'Edukasi') bg-gradient-to-r from-blue-500 to-indigo-600
-                            @elseif($item['Pilar_Konten'] === 'Inspirasi') bg-gradient-to-r from-pink-500 to-rose-600
-                            @else bg-gradient-to-r from-green-500 to-emerald-600 @endif">
+            <!-- Content Calendar Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                @foreach($contentIdeas as $item)
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 h-full flex flex-col">
+                        <!-- Card Header -->
+                        <div class="relative p-6 pb-4
+                        @if($item->pilar_konten === 'Edukasi') bg-gradient-to-r from-blue-500 to-indigo-600
+                        @elseif($item->pilar_konten === 'Inspirasi') bg-gradient-to-r from-pink-500 to-rose-600
+                        @else bg-gradient-to-r from-green-500 to-emerald-600 @endif">
 
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center text-white">
-                                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
-                                            <span class="font-bold text-lg">{{ $item['Hari_ke'] }}</span>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-semibold opacity-90">Hari ke-{{ $item['Hari_ke'] }}</div>
-                                            <div class="text-xs opacity-75">{{ $item['Pilar_Konten'] }}</div>
-                                        </div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center text-white">
+                                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                                        <span class="font-bold text-lg">{{ $item->hari_ke }}</span>
                                     </div>
-                                    <div class="text-right">
-                                        @if($item['Pilar_Konten'] === 'Edukasi')
-                                            <i class="fas fa-graduation-cap text-white text-xl"></i>
-                                        @elseif($item['Pilar_Konten'] === 'Inspirasi')
-                                            <i class="fas fa-lightbulb text-white text-xl"></i>
-                                        @else
-                                            <i class="fas fa-bullhorn text-white text-xl"></i>
-                                        @endif
+                                    <div>
+                                        <div class="text-sm font-semibold opacity-90">Hari ke-{{ $item->hari_ke }}</div>
+                                        <div class="text-xs opacity-75">{{ $item->pilar_konten }}</div>
                                     </div>
                                 </div>
-
-                                <h3 class="text-xl font-bold text-white leading-tight">{{ $item['Judul_Konten'] }}</h3>
-                            </div>
-
-                            <!-- Card Body -->
-                            <div class="p-6 flex flex-col flex-grow">
-                                <!-- Format Badge -->
-                                <div class="mb-4">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-                                    @if($item['Pilar_Konten'] === 'Edukasi') bg-blue-100 text-blue-800
-                                    @elseif($item['Pilar_Konten'] === 'Inspirasi') bg-pink-100 text-pink-800
-                                    @else bg-green-100 text-green-800 @endif">
-                                    <i class="fas fa-tag mr-1"></i>
-                                    {{ $item['Rekomendasi_Format'] ?? 'Post Biasa' }}
-                                </span>
-                                </div>
-
-                                <!-- Hook -->
-                                <div class="mb-4 p-4 bg-gray-50 rounded-xl border-l-4
-                                @if($item['Pilar_Konten'] === 'Edukasi') border-blue-400
-                                @elseif($item['Pilar_Konten'] === 'Inspirasi') border-pink-400
-                                @else border-green-400 @endif">
-                                    <div class="text-xs font-semibold text-gray-500 mb-1">HOOK PEMBUKA:</div>
-                                    <div class="text-sm italic
-                                    @if($item['Pilar_Konten'] === 'Edukasi') text-blue-700
-                                    @elseif($item['Pilar_Konten'] === 'Inspirasi') text-pink-700
-                                    @else text-green-700 @endif font-medium">
-                                        "{{ $item['Hook'] }}"
-                                    </div>
-                                </div>
-
-                                <!-- Content Points -->
-                                <div class="mb-6 flex-grow">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">
-                                        <i class="fas fa-list-ul mr-2"></i>
-                                        Poin-Poin Utama:
-                                    </h4>
-                                    <ul class="space-y-2">
-                                        @foreach($item['Script_Poin_Utama'] as $poin)
-                                            <li class="flex items-start text-sm text-gray-600">
-                                                <div class="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0
-                                                @if($item['Pilar_Konten'] === 'Edukasi') bg-blue-400
-                                                @elseif($item['Pilar_Konten'] === 'Inspirasi') bg-pink-400
-                                                @else bg-green-400 @endif"></div>
-                                                <span>{{ $poin }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
+                                <div class="text-right">
+                                    @if($item->pilar_konten === 'Edukasi')
+                                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                                    @elseif($item->pilar_konten === 'Inspirasi')
+                                        <i class="fas fa-lightbulb text-white text-xl"></i>
+                                    @else
+                                        <i class="fas fa-bullhorn text-white text-xl"></i>
+                                    @endif
                                 </div>
                             </div>
 
-                            <!-- CTA Section - HIGHLIGHTED -->
-                            <div class="p-0 mt-auto">
-                                <div class="relative overflow-hidden
-                                @if($item['Pilar_Konten'] === 'Edukasi') bg-gradient-to-r from-blue-600 to-blue-700
-                                @elseif($item['Pilar_Konten'] === 'Inspirasi') bg-gradient-to-r from-pink-600 to-pink-700
-                                @else bg-gradient-to-r from-green-600 to-green-700 @endif">
+                            <h3 class="text-xl font-bold text-white leading-tight">{{ $item->judul_konten }}</h3>
+                        </div>
 
-                                    <!-- Animated background -->
-                                    <div class="absolute inset-0 bg-white bg-opacity-10 transform -skew-y-1"></div>
+                        <!-- Card Body -->
+                        <div class="p-6 flex flex-col flex-grow">
+                            <!-- Format Badge -->
+                            <div class="mb-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                @if($item->pilar_konten === 'Edukasi') bg-blue-100 text-blue-800
+                                @elseif($item->pilar_konten === 'Inspirasi') bg-pink-100 text-pink-800
+                                @else bg-green-100 text-green-800 @endif">
+                                <i class="fas fa-tag mr-1"></i>
+                                {{ $item->rekomendasi_format ?? 'Post Biasa' }}
+                            </span>
+                            </div>
 
-                                    <div class="relative p-6">
-                                        <!-- CTA Label with Icon -->
-                                        <div class="flex items-center justify-between mb-3">
-                                            <div class="flex items-center text-white">
-                                                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-2">
-                                                    <i class="fas fa-bullseye text-sm"></i>
+                            <!-- Hook -->
+                            <div class="mb-4 p-4 bg-gray-50 rounded-xl border-l-4
+                            @if($item->pilar_konten === 'Edukasi') border-blue-400
+                            @elseif($item->pilar_konten === 'Inspirasi') border-pink-400
+                            @else border-green-400 @endif">
+                                <div class="text-xs font-semibold text-gray-500 mb-1">HOOK PEMBUKA:</div>
+                                <div class="text-sm italic
+                                @if($item->pilar_konten === 'Edukasi') text-blue-700
+                                @elseif($item->pilar_konten === 'Inspirasi') text-pink-700
+                                @else text-green-700 @endif font-medium">
+                                    "{{ $item->hook }}"
+                                </div>
+                            </div>
+
+                            <!-- Content Points -->
+                            <div class="mb-4 flex-grow">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                                    <i class="fas fa-list-ul mr-2"></i>
+                                    Poin-Poin Utama:
+                                </h4>
+                                <ul class="space-y-2">
+                                    @php
+                                        $poinUtama = json_decode($item->script_poin_utama, true) ?? [];
+                                    @endphp
+                                    @foreach($poinUtama as $poin)
+                                        <li class="flex items-start text-sm text-gray-600">
+                                            <div class="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0
+                                            @if($item->pilar_konten === 'Edukasi') bg-blue-400
+                                            @elseif($item->pilar_konten === 'Inspirasi') bg-pink-400
+                                            @else bg-green-400 @endif"></div>
+                                            <span>{{ $poin }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+
+                            <!-- Generate Shooting Script Button -->
+                            <div class="mb-4">
+                                <a href="{{ route('front.shooting.form', $item->id) }}"
+                                   class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-semibold text-sm hover:from-orange-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105">
+                                    <i class="fas fa-video mr-2"></i>
+                                    Generate Shooting Script
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- CTA Section - HIGHLIGHTED -->
+                        <div class="p-0 mt-auto">
+                            <div class="relative overflow-hidden
+                            @if($item->pilar_konten === 'Edukasi') bg-gradient-to-r from-blue-600 to-blue-700
+                            @elseif($item->pilar_konten === 'Inspirasi') bg-gradient-to-r from-pink-600 to-pink-700
+                            @else bg-gradient-to-r from-green-600 to-green-700 @endif">
+
+                                <!-- Animated background -->
+                                <div class="absolute inset-0 bg-white bg-opacity-10 transform -skew-y-1"></div>
+
+                                <div class="relative p-6">
+                                    <!-- CTA Label with Icon -->
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center text-white">
+                                            <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-2">
+                                                <i class="fas fa-bullseye text-sm"></i>
+                                            </div>
+                                            <span class="text-xs font-bold uppercase tracking-widest">Call to Action</span>
+                                        </div>
+                                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center animate-pulse">
+                                            <i class="fas fa-exclamation text-white text-xs"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- CTA Content -->
+                                    <div class="bg-white bg-opacity-15 rounded-lg p-4 backdrop-blur-sm">
+                                        <div class="text-white">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-quote-left text-white text-opacity-60 mr-2 mt-1 flex-shrink-0"></i>
+                                                <div>
+                                                    <p class="font-bold text-base leading-tight mb-2">{{ $item->call_to_action }}</p>
                                                 </div>
-                                                <span class="text-xs font-bold uppercase tracking-widest">Call to Action</span>
-                                            </div>
-                                            <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center animate-pulse">
-                                                <i class="fas fa-exclamation text-white text-xs"></i>
+                                                <i class="fas fa-quote-right text-white text-opacity-60 ml-2 mt-1 flex-shrink-0"></i>
                                             </div>
                                         </div>
-
-                                        <!-- CTA Content -->
-                                        <div class="bg-white bg-opacity-15 rounded-lg p-4 backdrop-blur-sm">
-                                            <div class="text-white">
-                                                <div class="flex items-start">
-                                                    <i class="fas fa-quote-left text-white text-opacity-60 mr-2 mt-1 flex-shrink-0"></i>
-                                                    <div>
-                                                        <p class="font-bold text-base leading-tight mb-2">{{ $item['Call_to_Action_(CTA)'] }}</p>
-{{--                                                        <div class="flex items-center text-xs text-white text-opacity-80">--}}
-{{--                                                            <i class="fas fa-target mr-1"></i>--}}
-{{--                                                            <span>Tingkatkan Engagement</span>--}}
-{{--                                                            <span class="mx-2">•</span>--}}
-{{--                                                            <i class="fas fa-chart-line mr-1"></i>--}}
-{{--                                                            <span>Drive Action</span>--}}
-{{--                                                        </div>--}}
-                                                    </div>
-                                                    <i class="fas fa-quote-right text-white text-opacity-60 ml-2 mt-1 flex-shrink-0"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Action Button -->
-{{--                                        <div class="mt-4 text-center">--}}
-{{--                                            <button class="inline-flex items-center px-4 py-2 bg-white text-gray-800 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg">--}}
-{{--                                                <i class="fas fa-copy mr-2"></i>--}}
-{{--                                                Copy CTA--}}
-{{--                                            </button>--}}
-{{--                                        </div>--}}
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Card Footer -->
-                            <div class="px-6 py-4 bg-gray-50 border-t">
-                                <div class="flex items-center justify-between text-xs text-gray-500">
-{{--                                <span>--}}
-{{--                                    <i class="fas fa-clock mr-1"></i>--}}
-{{--                                    Waktu optimal: 10:00 - 14:00--}}
-{{--                                </span>--}}
-{{--                                    <span>--}}
-{{--                                    <i class="fas fa-eye mr-1"></i>--}}
-{{--                                    Target: High Engagement--}}
-{{--                                </span>--}}
                                 </div>
                             </div>
                         </div>
-                    @endforeach
-                </div>
 
-                <!-- Action Buttons -->
-                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-                    <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                        <div class="text-center md:text-left">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-1">Kalender Konten Siap Digunakan!</h3>
-                            <p class="text-gray-600 text-sm">Mulai implementasikan strategi konten Anda hari ini</p>
-                        </div>
-                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                            <button onclick="downloadCalendar()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">
-                                <i class="fas fa-download mr-2"></i>Download PDF
-                            </button>
-                            <button onclick="shareCalendar()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300">
-                                <i class="fas fa-share-alt mr-2"></i>Bagikan
-                            </button>
-                            <a href="{{ route('front.content.form', $session->id) }}"
-                               class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center">
-                                <i class="fas fa-sync-alt mr-2"></i>Generate Ulang
-                            </a>
+                        <!-- Card Footer -->
+                        <div class="px-6 py-4 bg-gray-50 border-t">
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endforeach
+            </div>
 
-            @else
-                <!-- Error State -->
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div class="p-8 md:p-12 text-center">
-                        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Gagal Memproses Kalender Konten</h2>
-                        <p class="text-gray-600 mb-8">Terjadi kesalahan saat memproses data kalender konten Anda.</p>
-
-                        <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                            <h4 class="font-semibold text-gray-700 mb-2">Data Debug:</h4>
-                            <pre class="text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{{ $contentPlan->ai_response }}</pre>
-                        </div>
-
+            <!-- Action Buttons -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1">Kalender Konten Siap Digunakan!</h3>
+                        <p class="text-gray-600 text-sm">Mulai implementasikan strategi konten Anda hari ini</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <button onclick="downloadCalendar()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">
+                            <i class="fas fa-download mr-2"></i>Download PDF
+                        </button>
+                        <button onclick="shareCalendar()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300">
+                            <i class="fas fa-share-alt mr-2"></i>Bagikan
+                        </button>
                         <a href="{{ route('front.content.form', $session->id) }}"
-                           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300">
-                            <i class="fas fa-redo mr-2"></i>Coba Generate Ulang
+                           class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center">
+                            <i class="fas fa-sync-alt mr-2"></i>Generate Ulang
                         </a>
                     </div>
                 </div>
-            @endif
+            </div>
 
             <!-- Tips Section -->
             <div class="mt-8 grid md:grid-cols-2 gap-6">

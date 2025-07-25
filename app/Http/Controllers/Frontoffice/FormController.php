@@ -9,14 +9,23 @@ use App\Models\UserAnswer;
 use App\Models\AiResponse;
 use Illuminate\Support\Str;
 use App\Models\Question;
+use App\Models\ContentIdea;
+use App\Models\ShootingScript;
 use Illuminate\Support\Facades\Http;
 
 class FormController extends Controller
 {
-    public function showForm()
+    public function showForm(Request $request)
     {
-        $questions = Question::where('is_active', 1)->orderBy('order')->get();
-        return view('frontoffice.form', compact('questions'));
+        // Ambil query string 'category', default ke "1"
+        $category = $request->query('category', '1');
+
+        $questions = Question::where('is_active', 1)
+            ->where('category', $category)
+            ->orderBy('order')
+            ->get();
+
+        return view('frontoffice.form', compact('questions', 'category'));
     }
 
     public function submitForm(Request $request)
@@ -256,10 +265,11 @@ EOP;
 
         // Jika sudah pernah generate, tampilkan hasil
         if ($contentPlan && $contentPlan->ai_response) {
-            return view('frontoffice.content_plan_result', compact('session', 'contentPlan'));
+            // Ambil data dari ContentIdea table
+            $contentIdeas = ContentIdea::where('user_session_id', $session_id)->orderBy('hari_ke')->get();
+            return view('frontoffice.content_plan_result', compact('session', 'contentIdeas'));
         }
 
-        // Atau tampilkan form pilih durasi (default 30 hari)
         return view('frontoffice.content_plan_form', compact('session'));
     }
 
@@ -269,41 +279,74 @@ EOP;
 
         $days = $request->input('days', 7);
 
-        // Ambil semua data yang dibutuhkan:
-        $answers = UserAnswer::where('user_session_id', $session_id)->pluck('answer', 'question_id')->toArray();
-        $questions = Question::orderBy('order')->get();
+        // Cek apakah sudah ada content ideas untuk session ini
+        $existingContentIdeas = ContentIdea::where('user_session_id', $session_id)->get();
 
-        // Masalah inti, SWOT, USP, Persona dari ai_responses SWOT step
-        $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
-        $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
+        // Jika belum ada, generate baru
+        if ($existingContentIdeas->isEmpty()) {
+            // Ambil semua data yang dibutuhkan:
+            $answers = UserAnswer::where('user_session_id', $session_id)->pluck('answer', 'question_id')->toArray();
+            $questions = Question::orderBy('order')->get();
 
-        // Extract output (misal: regex atau parsing sederhana) untuk USP dan Persona jika ingin lebih advance,
-        // atau langsung lampirkan output response SWOT untuk bagian SWOT/USP/Persona.
+            // Masalah inti, SWOT, USP, Persona dari ai_responses SWOT step
+            $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
+            $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
 
-        $prompt = $this->generateContentPlanPrompt(
-            $questions, $answers,
-            $diagnosis?->ai_response,
-            $swot?->ai_response,
-            $days
-        );
+            $prompt = $this->generateContentPlanPrompt(
+                $questions, $answers,
+                $diagnosis?->ai_response,
+                $swot?->ai_response,
+                $days
+            );
 
-        $geminiResponse = $this->sendToGemini($prompt);
+            $geminiResponse = $this->sendToGemini($prompt);
 
-        // **Extract json jika perlu:** (pastikan Gemini benar-benar mengirim JSON!)
-        $jsonStart = strpos($geminiResponse, '[');
+            $jsonString = $this->extractJsonFromResponse($geminiResponse);
 
-        $jsonString = $this->extractJsonFromResponse($geminiResponse);
+            // --- Convert ke array ---
+            $kontenArray = json_decode($jsonString, true);
 
-        // Simpan di ai_responses step content_plan
-        $contentPlan = AiResponse::create([
-            'user_session_id' => $session_id,
-            'step' => 'content_plan',
-            'prompt' => $prompt,
-            'ai_response' => $jsonString
-//            'ai_response_json' => $jsonString,
-        ]);
+            // Safety: handle jika error parsing
+            if (!is_array($kontenArray)) {
+                throw new \Exception('Gagal parsing JSON dari Gemini.');
+            }
 
-        return view('frontoffice.content_plan_result', compact('session', 'contentPlan'));
+            // --- Simpan ke table content_ideas ---
+            foreach ($kontenArray as $item) {
+                ContentIdea::updateOrCreate(
+                    [
+                        'user_session_id' => $session_id,
+                        'hari_ke' => $item['Hari_ke'],
+                    ],
+                    [
+                        'judul_konten' => $item['Judul_Konten'],
+                        'pilar_konten' => $item['Pilar_Konten'],
+                        'hook' => $item['Hook'],
+                        'script_poin_utama' => is_array($item['Script_Poin_Utama'])
+                            ? json_encode($item['Script_Poin_Utama'])
+                            : $item['Script_Poin_Utama'],
+                        'call_to_action' => $item['Call_to_Action_(CTA)'],
+                        'rekomendasi_format' => $item['Rekomendasi_Format'],
+                    ]
+                );
+            }
+
+            // Simpan di ai_responses step content_plan
+            AiResponse::create([
+                'user_session_id' => $session_id,
+                'step' => 'content_plan',
+                'prompt' => $prompt,
+                'ai_response' => $jsonString
+            ]);
+
+            // Ambil data yang baru disimpan
+            $contentIdeas = ContentIdea::where('user_session_id', $session_id)->orderBy('hari_ke')->get();
+        } else {
+            // Jika sudah ada, gunakan data existing
+            $contentIdeas = $existingContentIdeas->sortBy('hari_ke');
+        }
+
+        return view('frontoffice.content_plan_result', compact('session', 'contentIdeas'));
     }
 
     protected function generateContentPlanPrompt($questions, $answers, $diagnosis, $swot, $days)
@@ -414,6 +457,171 @@ EOP;
         $sessions->load(['aiResponses']);
 
         return view('frontoffice.history', compact('sessions'));
+    }
+
+    public function showShootingScriptForm($contentIdea)
+    {
+        $contentIdea = ContentIdea::findOrFail($contentIdea);
+        $session = UserSession::findOrFail($contentIdea->user_session_id);
+
+        // Ambil data DNA Bisnis & USP dari AI sebelumnya
+        $diagnosis = AiResponse::where('user_session_id', $contentIdea->user_session_id)->where('step', 'diagnosis')->first();
+        $swot = AiResponse::where('user_session_id', $contentIdea->user_session_id)->where('step', 'swot')->first();
+
+        return view('frontoffice.shooting_script_form', compact('session', 'contentIdea', 'diagnosis', 'swot'));
+    }
+
+    public function generateShootingScript(Request $request, $contentIdea)
+    {
+        $contentIdea = ContentIdea::findOrFail($contentIdea);
+        $session = UserSession::findOrFail($contentIdea->user_session_id);
+
+        // Validasi input
+        $request->validate([
+            'gaya_pembawaan' => 'required|string',
+            'target_durasi' => 'required|string',
+            'penyebutan_audiens' => 'required|string'
+        ]);
+
+        // Ambil data DNA Bisnis & USP dari AI sebelumnya
+        $diagnosis = AiResponse::where('user_session_id', $contentIdea->user_session_id)->where('step', 'diagnosis')->first();
+        $swot = AiResponse::where('user_session_id', $contentIdea->user_session_id)->where('step', 'swot')->first();
+
+        // Cek apakah sudah ada shooting script untuk content idea ini
+        $existingScript = ShootingScript::where('content_idea_id', $contentIdea->id)->first();
+
+        if (!$existingScript) {
+            // Generate prompt shooting script
+            $prompt = $this->generateShootingScriptPrompt(
+                $contentIdea,
+                $diagnosis?->ai_response ?? '',
+                $swot?->ai_response ?? '',
+                $request->input('gaya_pembawaan'),
+                $request->input('target_durasi'),
+                $request->input('penyebutan_audiens')
+            );
+
+            // Kirim ke Gemini
+            $geminiResponse = $this->sendToGemini($prompt);
+
+            // Extract JSON dari response
+            $jsonString = $this->extractJsonFromShootingScriptResponse($geminiResponse);
+
+            // Validate JSON
+            $scriptArray = json_decode($jsonString, true);
+            if (!is_array($scriptArray)) {
+                throw new \Exception('Gagal parsing JSON shooting script dari Gemini.');
+            }
+
+            // Simpan ke database
+            $shootingScript = ShootingScript::create([
+                'content_idea_id' => $contentIdea->id,
+                'user_session_id' => $contentIdea->user_session_id, // Tambahkan ini
+                'gaya_pembawaan' => $request->input('gaya_pembawaan'),
+                'target_durasi' => $request->input('target_durasi'),
+                'penyebutan_audiens' => $request->input('penyebutan_audiens'),
+                'prompt' => $prompt,
+                'ai_response' => $jsonString,
+//                'script_data' => json_encode($scriptArray)
+                'script_json' => $jsonString // Tambahkan ini
+            ]);
+        } else {
+            $shootingScript = $existingScript;
+            $scriptArray = $this->cleanAndDecodeJson($shootingScript->script_json);
+        }
+
+        return view('frontoffice.shooting_script_result', compact('session', 'contentIdea', 'shootingScript', 'scriptArray'));
+    }
+
+    protected function generateShootingScriptPrompt($contentIdea, $diagnosis, $swot, $gayaPembawaan, $targetDurasi, $penyebutanAudiens)
+    {
+        $poinUtama = json_decode($contentIdea->script_poin_utama, true) ?? [];
+        $poinUtamaStr = implode("\n", array_map(function($poin, $index) {
+            return ($index + 1) . ". " . $poin;
+        }, $poinUtama, array_keys($poinUtama)));
+
+        return <<<EOP
+# PERAN DAN TUJUAN
+Anda adalah seorang Sutradara dan Script Writer untuk konten media sosial (Reels/TikTok) yang sangat berpengalaman. Tugas Anda adalah mengubah konsep konten mentah menjadi sebuah shooting script yang detail, menarik, dan siap dieksekusi, dalam format JSON.
+
+# INPUT: KONSEP KONTEN
+* **DNA BISNIS :** $diagnosis
+* **USP Bisnis :** $swot
+* **Judul Konten:** {$contentIdea->judul_konten}
+* **Hook:** {$contentIdea->hook}
+* **Poin Utama:**
+$poinUtamaStr
+* **Call to Action (CTA):** {$contentIdea->call_to_action}
+
+# INPUT: KRITERIA SCRIPT
+* **Gaya Pembawaan:** $gayaPembawaan
+* **Target Durasi Total:** $targetDurasi
+* **Penyebutan Audiens:** $penyebutanAudiens
+
+# FORMAT OUTPUT (**SANGAT WAJIB**)
+1. OUTPUT HANYA dalam format JSON **asli** (valid JSON array), **bukan string JSON** dan **tanpa karakter escape**.
+2. Output TIDAK BOLEH berisi tanda kutip luar, karakter `\n`, atau escape sequence lainnya.
+3. Output HARUS berupa **array JSON** yang valid secara langsung, misal:
+
+[
+  {
+    "no": 1,
+    "durasi": 3,
+    "script": "Contoh script di sini",
+    "kategori": "Hook"
+  },
+  {
+    "no": 2,
+    "durasi": 5,
+    "script": "Contoh script kedua",
+    "kategori": "Isi"
+  }
+]
+
+4. Setiap elemen harus memiliki key: `no` (integer), `durasi` (detik), `script` (string), `kategori` (string: "Hook", "Isi", "Penutup", "CTA").
+5. Total `durasi` harus mendekati $targetDurasi detik.
+6. **PENTING: Jika Anda salah format, ULANGI dan hanya kembalikan array JSON yang valid, tanpa penjelasan apapun.**
+
+# MULAI
+EOP;
+    }
+
+
+    protected function extractJsonFromShootingScriptResponse($responseText)
+    {
+        // Hilangkan ```json di awal dan ``` di akhir
+        $responseText = trim($responseText);
+        $responseText = preg_replace('/^```json\s*/', '', $responseText);
+        $responseText = preg_replace('/```$/', '', $responseText);
+
+        // Cari blok array JSON pertama
+        $jsonStart = strpos($responseText, '[');
+        $jsonEnd = strrpos($responseText, ']');
+        if ($jsonStart !== false && $jsonEnd !== false) {
+            return substr($responseText, $jsonStart, $jsonEnd - $jsonStart + 1);
+        }
+
+        // Jika tidak ada array, coba cari object
+        $jsonStart = strpos($responseText, '{');
+        $jsonEnd = strrpos($responseText, '}');
+        if ($jsonStart !== false && $jsonEnd !== false) {
+            return substr($responseText, $jsonStart, $jsonEnd - $jsonStart + 1);
+        }
+
+        return null;
+    }
+
+    private function cleanAndDecodeJson($jsonString)
+    {
+        // Hilangkan escape characters dan newlines
+        $cleaned = str_replace(['\n', '\"', '\\'], ['', '"', ''], $jsonString);
+
+        // Jika masih ada masalah, coba dengan stripslashes
+        if (!json_decode($cleaned)) {
+            $cleaned = stripslashes($jsonString);
+        }
+
+        return json_decode($cleaned, true) ?? [];
     }
 
 

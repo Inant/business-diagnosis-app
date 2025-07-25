@@ -26,14 +26,26 @@
                 <textarea name="question" required rows="4"
                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none">{{ old('question', $question->question ?? '') }}</textarea>
             </div>
-            <div class="sm:w-1/3">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Status</label>
-                <select name="is_active"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                    <option value="1" {{ old('is_active', $question->is_active ?? '1') == '1' ? 'selected' : '' }}>Aktif</option>
-                    <option value="0" {{ old('is_active', $question->is_active ?? '1') == '0' ? 'selected' : '' }}>Nonaktif</option>
-                </select>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Kategori</label>
+                    <select name="category"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        <option value="1" {{ old('category', $question->category ?? '1') == '1' ? 'selected' : '' }}>Kategori 1</option>
+                        <option value="2" {{ old('category', $question->category ?? '1') == '2' ? 'selected' : '' }}>Kategori 2</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Status</label>
+                    <select name="is_active"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        <option value="1" {{ old('is_active', $question->is_active ?? '1') == '1' ? 'selected' : '' }}>Aktif</option>
+                        <option value="0" {{ old('is_active', $question->is_active ?? '1') == '0' ? 'selected' : '' }}>Nonaktif</option>
+                    </select>
+                </div>
             </div>
+
             <div>
                 <button type="submit"
                         class="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow transition">

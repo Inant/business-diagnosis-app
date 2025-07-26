@@ -7,7 +7,7 @@ use App\Http\Controllers\Backoffice\QuestionController;
 use App\Http\Controllers\Frontoffice\FormController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {

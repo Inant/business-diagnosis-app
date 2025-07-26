@@ -22,6 +22,12 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
     Route::resource('questions', QuestionController::class);
+
+    // Route untuk usage statistics
+    Route::get('/usage-stats', [FormController::class, 'showUsageStats'])->name('backoffice.usage_stats');
+
+    // Route untuk export usage ke CSV/Excel
+    Route::get('/usage-export', [FormController::class, 'exportUsage'])->name('backoffice.usage_export');
 });
 
 //analisa awal
@@ -61,9 +67,9 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
 });
 
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/frontoffice', [FrontofficeController::class, 'index'])->name('frontoffice.dashboard');
-});
+//Route::middleware(['auth'])->group(function () {
+//    Route::get('/frontoffice', [FrontofficeController::class, 'index'])->name('frontoffice.dashboard');
+//});
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/backoffice', [BackofficeController::class, 'index'])->name('backoffice.dashboard');

@@ -9,9 +9,10 @@
                         @if(auth()->user()->role === 'admin')
                             <a href="{{ route('questions.index') }}" class="hover:text-blue-300">Manajemen Pertanyaan</a>
                             <a href="{{ route('backoffice.sessions') }}" class="hover:text-blue-300">Data Jawaban User</a>
+                            <a href="{{ route('backoffice.usage_stats') }}" class="hover:text-blue-300">API Statistic</a>
                         @else
                             <a href="{{ route('front.form') }}" class="hover:text-blue-300">Isi Form Analisa</a>
-                            <a href="{{ route('front.form', ['category' => 2]) }}" class="hover:text-blue-300">Isi Form Analisa 2</a>
+{{--                            <a href="{{ route('front.form', ['category' => 2]) }}" class="hover:text-blue-300">Isi Form Analisa 2</a>--}}
                             <a href="{{ route('front.history') }}" class="hover:text-blue-300">Riwayat Analisa Saya</a>
 
                             <!-- MENU TAMBAHAN (Frontoffice Only) -->
@@ -58,9 +59,10 @@
                 @if(auth()->user()->role === 'admin')
                     <a href="{{ route('questions.index') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Manajemen Pertanyaan</a>
                     <a href="{{ route('backoffice.sessions') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Data Jawaban User</a>
+                    <a href="{{ route('backoffice.usage_stats') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">API Statistic</a>
                 @else
                     <a href="{{ route('front.form') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Analisa</a>
-                    <a href="{{ route('front.form', ['category' => 2]) }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Pertanyaan 2</a>
+{{--                    <a href="{{ route('front.form', ['category' => 2]) }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Pertanyaan 2</a>--}}
                     <a href="{{ route('front.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Riwayat Analisa Saya</a>
 
                     <!-- MENU TAMBAHAN (Frontoffice Only - MOBILE) -->

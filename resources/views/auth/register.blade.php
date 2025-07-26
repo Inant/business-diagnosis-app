@@ -23,6 +23,16 @@
             <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
         </div>
 
+        <!-- Pilih Plan -->
+        <div class="mt-4">
+            <x-input-label for="plan" :value="'Pilih Plan'" />
+            <select id="plan" name="plan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-indigo-200" required>
+                <option value="standard" {{ old('plan', 'standard') == 'standard' ? 'selected' : '' }}>Standard</option>
+                <option value="pro" {{ old('plan') == 'pro' ? 'selected' : '' }}>Pro</option>
+            </select>
+            <x-input-error :messages="$errors->get('plan')" class="mt-2" />
+        </div>
+
         <!-- Kata Sandi -->
         <div class="mt-4">
             <x-input-label for="password" :value="'Kata Sandi'" />

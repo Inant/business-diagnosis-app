@@ -12,13 +12,25 @@ use App\Models\Question;
 use App\Models\ContentIdea;
 use App\Models\ShootingScript;
 use Illuminate\Support\Facades\Http;
+use App\Services\GeminiApiService; // Import service baru
 
 class FormController extends Controller
 {
+    protected $geminiService;
+
+    public function __construct(GeminiApiService $geminiService)
+    {
+        $this->geminiService = $geminiService;
+    }
     public function showForm(Request $request)
     {
-        // Ambil query string 'category', default ke "1"
-        $category = $request->query('category', '1');
+        $user = auth()->user();
+
+        // Default category berdasar plan user
+        $defaultCategory = $user && $user->plan === 'pro' ? '1' : '2';
+
+        // Query string bisa override, tapi default pakai logic di atas
+        $category = $request->query('category', $defaultCategory);
 
         $questions = Question::where('is_active', 1)
             ->where('category', $category)
@@ -32,12 +44,9 @@ class FormController extends Controller
     {
         $user = auth()->user();
 
-        // Simpan session baru
         $session = UserSession::create([
             'user_id' => $user->id,
             'session_id' => (string) Str::uuid(),
-            // Kolom prompt/gemini_response di sini bisa dikosongkan atau diisi,
-            // tapi akan kita simpan ke ai_responses.
             'prompt' => null,
             'gemini_response' => null,
         ]);
@@ -51,24 +60,39 @@ class FormController extends Controller
             ]);
         }
 
-        // Generate prompt
         $prompt = $this->generatePrompt($answers);
 
-        // Kirim ke Gemini
-        $geminiResponse = $this->sendToGemini($prompt);
+        // Debug: Log sebelum panggil service
+        \Log::info('About to call Gemini service');
 
-        // Simpan ke ai_responses, step diagnosis
-        AiResponse::create([
+        $result = $this->geminiService->generateContent(
+            $prompt,
+            $user->id,
+            $session->id,
+            'diagnosis'
+        );
+
+        // Debug: Log hasil service
+        \Log::info('Gemini service result:', $result);
+
+        // Debug: Check apa yang akan disimpan
+        $dataToSave = [
             'user_session_id' => $session->id,
             'step' => 'diagnosis',
             'prompt' => $prompt,
-            'ai_response' => $geminiResponse,
-        ]);
+            'ai_response' => $result['content'],
+            'tokens_used' => $result['usage']['total_tokens'],
+            'cost_idr' => $result['usage']['total_cost_idr'],
+            'response_time_ms' => $result['usage']['response_time_ms']
+        ];
 
-        // (Opsional: tetap update session, atau skip)
+        \Log::info('Data to save to ai_responses:', $dataToSave);
+
+        AiResponse::create($dataToSave);
+
         $session->update([
             'prompt' => $prompt,
-            'gemini_response' => $geminiResponse,
+            'gemini_response' => $result['content'],
         ]);
 
         return redirect()->route('front.result', ['session' => $session->id]);
@@ -175,8 +199,9 @@ EOP;
 
     public function showSwotForm($session_id)
     {
-        ini_set('max_execution_time', 300); // 5 menit
+        ini_set('max_execution_time', 300);
         $session = UserSession::findOrFail($session_id);
+        $user = auth()->user();
 
         // Cek jika sudah pernah analisa SWOT
         $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
@@ -187,21 +212,29 @@ EOP;
         // Ambil jawaban-jawaban awal
         $answers = UserAnswer::where('user_session_id', $session_id)->pluck('answer', 'question_id')->toArray();
 
-        // Ambil hasil diagnosis/masalah inti dari ai_responses step 'diagnosis'
+        // Ambil hasil diagnosis
         $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
 
         // Generate prompt analisa SWOT
         $prompt = $this->generateSwotPrompt($answers, $diagnosis ? $diagnosis->ai_response : '');
 
-        // Kirim ke Gemini
-        $response = $this->sendToGemini($prompt);
+        // Kirim ke Gemini dengan tracking
+        $result = $this->geminiService->generateContent(
+            $prompt,
+            $user->id,
+            $session_id,
+            'swot'
+        );
 
         // Simpan
         $swot = AiResponse::create([
             'user_session_id' => $session_id,
             'step' => 'swot',
             'prompt' => $prompt,
-            'ai_response' => $response,
+            'ai_response' => $result['content'],
+            'tokens_used' => $result['usage']['total_tokens'],
+            'cost_idr' => $result['usage']['total_cost_idr'],
+            'response_time_ms' => $result['usage']['response_time_ms']
         ]);
 
         return view('frontoffice.swot_result', compact('session', 'swot'));
@@ -276,19 +309,17 @@ EOP;
     public function generateContentPlan(Request $request, $session_id)
     {
         $session = UserSession::findOrFail($session_id);
-
+        $user = auth()->user();
         $days = $request->input('days', 7);
 
-        // Cek apakah sudah ada content ideas untuk session ini
+        // Cek apakah sudah ada content ideas
         $existingContentIdeas = ContentIdea::where('user_session_id', $session_id)->get();
 
-        // Jika belum ada, generate baru
         if ($existingContentIdeas->isEmpty()) {
-            // Ambil semua data yang dibutuhkan:
+            // Generate baru
             $answers = UserAnswer::where('user_session_id', $session_id)->pluck('answer', 'question_id')->toArray();
             $questions = Question::orderBy('order')->get();
 
-            // Masalah inti, SWOT, USP, Persona dari ai_responses SWOT step
             $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
             $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
 
@@ -299,19 +330,22 @@ EOP;
                 $days
             );
 
-            $geminiResponse = $this->sendToGemini($prompt);
+            // Kirim ke Gemini dengan tracking
+            $result = $this->geminiService->generateContent(
+                $prompt,
+                $user->id,
+                $session_id,
+                'content_plan'
+            );
 
-            $jsonString = $this->extractJsonFromResponse($geminiResponse);
-
-            // --- Convert ke array ---
+            $jsonString = $this->extractJsonFromResponse($result['content']);
             $kontenArray = json_decode($jsonString, true);
 
-            // Safety: handle jika error parsing
             if (!is_array($kontenArray)) {
                 throw new \Exception('Gagal parsing JSON dari Gemini.');
             }
 
-            // --- Simpan ke table content_ideas ---
+            // Simpan ke table content_ideas
             foreach ($kontenArray as $item) {
                 ContentIdea::updateOrCreate(
                     [
@@ -331,18 +365,19 @@ EOP;
                 );
             }
 
-            // Simpan di ai_responses step content_plan
+            // Simpan di ai_responses
             AiResponse::create([
                 'user_session_id' => $session_id,
                 'step' => 'content_plan',
                 'prompt' => $prompt,
-                'ai_response' => $jsonString
+                'ai_response' => $jsonString,
+                'tokens_used' => $result['usage']['total_tokens'],
+                'cost_idr' => $result['usage']['total_cost_idr'],
+                'response_time_ms' => $result['usage']['response_time_ms']
             ]);
 
-            // Ambil data yang baru disimpan
             $contentIdeas = ContentIdea::where('user_session_id', $session_id)->orderBy('hari_ke')->get();
         } else {
-            // Jika sudah ada, gunakan data existing
             $contentIdeas = $existingContentIdeas->sortBy('hari_ke');
         }
 
@@ -475,23 +510,20 @@ EOP;
     {
         $contentIdea = ContentIdea::findOrFail($contentIdea);
         $session = UserSession::findOrFail($contentIdea->user_session_id);
+        $user = auth()->user();
 
-        // Validasi input
         $request->validate([
             'gaya_pembawaan' => 'required|string',
             'target_durasi' => 'required|string',
             'penyebutan_audiens' => 'required|string'
         ]);
 
-        // Ambil data DNA Bisnis & USP dari AI sebelumnya
         $diagnosis = AiResponse::where('user_session_id', $contentIdea->user_session_id)->where('step', 'diagnosis')->first();
         $swot = AiResponse::where('user_session_id', $contentIdea->user_session_id)->where('step', 'swot')->first();
 
-        // Cek apakah sudah ada shooting script untuk content idea ini
         $existingScript = ShootingScript::where('content_idea_id', $contentIdea->id)->first();
 
         if (!$existingScript) {
-            // Generate prompt shooting script
             $prompt = $this->generateShootingScriptPrompt(
                 $contentIdea,
                 $diagnosis?->ai_response ?? '',
@@ -501,29 +533,33 @@ EOP;
                 $request->input('penyebutan_audiens')
             );
 
-            // Kirim ke Gemini
-            $geminiResponse = $this->sendToGemini($prompt);
+            // Kirim ke Gemini dengan tracking
+            $result = $this->geminiService->generateContent(
+                $prompt,
+                $user->id,
+                $contentIdea->user_session_id,
+                'shooting_script'
+            );
 
-            // Extract JSON dari response
-            $jsonString = $this->extractJsonFromShootingScriptResponse($geminiResponse);
-
-            // Validate JSON
+            $jsonString = $this->extractJsonFromShootingScriptResponse($result['content']);
             $scriptArray = json_decode($jsonString, true);
+
             if (!is_array($scriptArray)) {
                 throw new \Exception('Gagal parsing JSON shooting script dari Gemini.');
             }
 
-            // Simpan ke database
             $shootingScript = ShootingScript::create([
                 'content_idea_id' => $contentIdea->id,
-                'user_session_id' => $contentIdea->user_session_id, // Tambahkan ini
+                'user_session_id' => $contentIdea->user_session_id,
                 'gaya_pembawaan' => $request->input('gaya_pembawaan'),
                 'target_durasi' => $request->input('target_durasi'),
                 'penyebutan_audiens' => $request->input('penyebutan_audiens'),
                 'prompt' => $prompt,
                 'ai_response' => $jsonString,
-//                'script_data' => json_encode($scriptArray)
-                'script_json' => $jsonString // Tambahkan ini
+                'script_json' => $jsonString,
+                'tokens_used' => $result['usage']['total_tokens'],
+                'cost_idr' => $result['usage']['total_cost_idr'],
+                'response_time_ms' => $result['usage']['response_time_ms']
             ]);
         } else {
             $shootingScript = $existingScript;
@@ -622,6 +658,100 @@ EOP;
         }
 
         return json_decode($cleaned, true) ?? [];
+    }
+
+    // Method untuk melihat usage statistics
+    public function showUsageStats(Request $request)
+    {
+        // Hapus filter user, ambil semua user
+        // $user = auth()->user(); // Hapus ini
+
+        // Convert string ke Carbon object
+        $dateFromString = $request->input('date_from', now()->subDays(30)->format('Y-m-d'));
+        $dateToString = $request->input('date_to', now()->format('Y-m-d'));
+
+        $dateFrom = \Carbon\Carbon::parse($dateFromString);
+        $dateTo = \Carbon\Carbon::parse($dateToString);
+
+        // Ambil stats dari semua user (null = semua user)
+        $stats = $this->geminiService->getUsageStats(null, $dateFrom, $dateTo);
+
+        // Hitung total dari semua user
+        $totalStats = [
+            'total_requests' => $stats->sum('total_requests'),
+            'total_tokens' => $stats->sum('total_tokens'),
+            'total_cost_idr' => $stats->sum('total_cost_idr'),
+            'avg_response_time' => $stats->avg('avg_response_time_ms')
+        ];
+
+        // Ambil data user untuk tabel
+        $userStats = $this->geminiService->getUserStats($dateFrom, $dateTo);
+
+        return view('frontoffice.usage_stats', compact('stats', 'totalStats', 'dateFrom', 'dateTo', 'userStats'));
+    }
+
+    public function exportUsage(Request $request)
+    {
+        $user = auth()->user();
+
+        // Convert string ke Carbon object
+        $dateFromString = $request->input('date_from', now()->subDays(30)->format('Y-m-d'));
+        $dateToString = $request->input('date_to', now()->format('Y-m-d'));
+
+        $dateFrom = \Carbon\Carbon::parse($dateFromString);
+        $dateTo = \Carbon\Carbon::parse($dateToString);
+
+        $usages = \App\Models\ApiUsage::where('user_id', $user->id)
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filename = 'gemini_usage_' . $dateFromString . '_to_' . $dateToString . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($usages) {
+            $file = fopen('php://output', 'w');
+
+            // Header CSV
+            fputcsv($file, [
+                'Tanggal',
+                'Session ID',
+                'Tahap',
+                'Input Tokens',
+                'Output Tokens',
+                'Total Tokens',
+                'Biaya Input (Rp)',
+                'Biaya Output (Rp)',
+                'Total Biaya (Rp)',
+                'Response Time (ms)',
+                'Status'
+            ]);
+
+            // Data
+            foreach ($usages as $usage) {
+                fputcsv($file, [
+                    $usage->created_at->format('Y-m-d H:i:s'),
+                    $usage->session_id,
+                    $usage->step,
+                    $usage->input_tokens,
+                    $usage->output_tokens,
+                    $usage->total_tokens,
+                    $usage->input_cost_idr,
+                    $usage->output_cost_idr,
+                    $usage->total_cost_idr,
+                    $usage->response_time_ms,
+                    $usage->status
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
 

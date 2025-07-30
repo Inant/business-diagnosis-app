@@ -134,6 +134,22 @@
         </div>
     </div>
 
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+            <div class="mb-6">
+                <div class="w-16 h-16 mx-auto mb-4">
+                    <div class="loading-spinner"></div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Sedang Memproses</h3>
+                <p class="text-gray-600 text-sm">Mohon tunggu, kami sedang menganalisa...</p>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="loading-progress bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
     <style>
         .step {
             display: none;
@@ -264,6 +280,86 @@
         * {
             -webkit-tap-highlight-color: transparent;
         }
+
+        /* Loading Modal */
+        #loading-modal {
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #loading-modal.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            width: 64px;
+            height: 64px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Loading Progress Bar */
+        .loading-progress {
+            width: 0%;
+            transition: width 3s ease-in-out;
+        }
+
+        /* Modal Animation */
+        #loading-modal.show .bg-white {
+            animation: modalBounce 0.5s ease-out;
+        }
+
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.3) translateY(-50px);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05) translateY(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Pulse effect untuk spinner */
+        .loading-spinner::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 72px;
+            height: 72px;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
     </style>
 
     <script>
@@ -281,6 +377,9 @@
             const currentStepSpan = document.getElementById('current-step');
             const stepIndicators = document.querySelectorAll('.step-indicator');
 
+            // Flag untuk mengontrol beforeunload
+            let isSubmitting = false;
+
             // Function to clear localStorage for form
             function clearFormLocalStorage() {
                 const keys = Object.keys(localStorage);
@@ -289,6 +388,34 @@
                         localStorage.removeItem(key);
                     }
                 });
+            }
+
+            // Function to show loading modal
+            function showLoadingModal() {
+                const modal = document.getElementById('loading-modal');
+                modal.classList.remove('hidden');
+
+                // Force reflow untuk memastikan perubahan class diterapkan
+                modal.offsetHeight;
+
+                modal.classList.add('show');
+
+                // Prevent scrolling while modal is open
+                document.body.style.overflow = 'hidden';
+
+                // Trigger progress bar animation
+                setTimeout(() => {
+                    const progressBar = modal.querySelector('.loading-progress');
+                    progressBar.style.width = '95%';
+                }, 100);
+            }
+
+            // Function to hide loading modal (jika diperlukan)
+            function hideLoadingModal() {
+                const modal = document.getElementById('loading-modal');
+                modal.classList.remove('show');
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
             }
 
             // Character counter
@@ -498,7 +625,13 @@
                 }
             });
 
+            // SUBMIT HANDLER - DIPERBAIKI
             document.getElementById('multi-step-form').addEventListener('submit', function(e) {
+                console.log('Form submit triggered');
+
+                // Set flag bahwa kita sedang submit
+                isSubmitting = true;
+
                 let allValid = true;
                 let firstInvalidStep = null;
 
@@ -514,6 +647,7 @@
 
                 if (!allValid) {
                     e.preventDefault();
+                    isSubmitting = false; // Reset flag jika validasi gagal
                     alert('Mohon lengkapi semua jawaban dengan minimal 10 karakter');
 
                     if (firstInvalidStep) {
@@ -522,14 +656,21 @@
                     return false;
                 }
 
+                console.log('Showing loading modal');
+                showLoadingModal();
+
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengirim...';
                 submitBtn.disabled = true;
 
+                // Clear localStorage setelah delay
                 setTimeout(() => {
                     clearFormLocalStorage();
                 }, 1000);
+
+                // Form akan submit secara normal karena kita tidak preventDefault
             });
 
+            // Local storage handlers
             document.querySelectorAll('textarea').forEach(textarea => {
                 textarea.addEventListener('input', function() {
                     const key = 'form_answer_' + textarea.name;
@@ -546,7 +687,14 @@
                 });
             });
 
+            // DIPERBAIKI: beforeunload hanya aktif jika TIDAK sedang submit
             window.addEventListener('beforeunload', function(e) {
+                // Jika sedang submit, jangan tampilkan konfirmasi
+                if (isSubmitting) {
+                    return;
+                }
+
+                // Hanya tampilkan konfirmasi jika ada data dan TIDAK sedang submit
                 if (formHasData) {
                     const message = 'Anda memiliki data yang belum disimpan. Yakin ingin meninggalkan halaman?';
                     e.returnValue = message;
@@ -569,4 +717,5 @@
             });
         });
     </script>
+
 @endsection

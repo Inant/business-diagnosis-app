@@ -311,6 +311,7 @@ EOP;
         $session = UserSession::findOrFail($session_id);
         $user = auth()->user();
         $days = $request->input('days', 7);
+        $tujuan_pembuatan_konten = $request->input('tujuan_pembuatan_konten', null);
 
         // Cek apakah sudah ada content ideas
         $existingContentIdeas = ContentIdea::where('user_session_id', $session_id)->get();
@@ -327,7 +328,8 @@ EOP;
                 $questions, $answers,
                 $diagnosis?->ai_response,
                 $swot?->ai_response,
-                $days
+                $days,
+                $tujuan_pembuatan_konten
             );
 
             // Kirim ke Gemini dengan tracking
@@ -371,6 +373,7 @@ EOP;
                 'step' => 'content_plan',
                 'prompt' => $prompt,
                 'ai_response' => $jsonString,
+                'tujuan_pembuatan_konten' => $tujuan_pembuatan_konten,
                 'tokens_used' => $result['usage']['total_tokens'],
                 'cost_idr' => $result['usage']['total_cost_idr'],
                 'response_time_ms' => $result['usage']['response_time_ms']
@@ -384,7 +387,7 @@ EOP;
         return view('frontoffice.content_plan_result', compact('session', 'contentIdeas'));
     }
 
-    protected function generateContentPlanPrompt($questions, $answers, $diagnosis, $swot, $days)
+    protected function generateContentPlanPrompt($questions, $answers, $diagnosis, $swot, $days, $tujuan_pembuatan_konten)
     {
         // Jawaban user untuk 8 pertanyaan awal (bagian A)
         $jawabanList = [];
@@ -415,7 +418,7 @@ $jawabanStr
 * **Analisis SWOT:** $swotStr
 
 **BAGIAN C: PERMINTAAN KONTEN DINAMIS**
-* **Durasi Rencana Konten:** Buatkan rencana untuk **$durasi** hari.
+* **Durasi Rencana Konten:** Buatkan rencana untuk **$durasi** hari
 
 # TUGAS
 1.  Buatkan **Rencana Kalender Konten** untuk durasi yang diminta pada **Bagian C**.
@@ -555,7 +558,7 @@ EOP;
                 'target_durasi' => $request->input('target_durasi'),
                 'penyebutan_audiens' => $request->input('penyebutan_audiens'),
                 'prompt' => $prompt,
-                'ai_response' => $jsonString,
+                'raw_ai_response' => $jsonString,
                 'script_json' => $jsonString,
                 'tokens_used' => $result['usage']['total_tokens'],
                 'cost_idr' => $result['usage']['total_cost_idr'],

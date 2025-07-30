@@ -165,21 +165,21 @@
             @endif
 
             <!-- Quick Actions -->
-            <div class="mt-6 sm:mt-8 bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                <div class="text-center">
-                    <h4 class="font-semibold text-gray-800 mb-3 sm:mb-4 text-sm sm:text-base">Aksi Cepat</h4>
-                    <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-                        <a href="{{ route('front.form') }}"
-                           class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-xs sm:text-sm">
-                            <i class="fas fa-plus mr-2"></i>Analisa Bisnis Baru
-                        </a>
-                        <a href="{{ route('dashboard') }}"
-                           class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 text-xs sm:text-sm">
-                            <i class="fas fa-home mr-2"></i>Kembali ke Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
+{{--            <div class="mt-6 sm:mt-8 bg-white rounded-xl shadow-lg p-4 sm:p-6">--}}
+{{--                <div class="text-center">--}}
+{{--                    <h4 class="font-semibold text-gray-800 mb-3 sm:mb-4 text-sm sm:text-base">Aksi Cepat</h4>--}}
+{{--                    <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">--}}
+{{--                        <a href="{{ route('front.form') }}"--}}
+{{--                           class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-xs sm:text-sm">--}}
+{{--                            <i class="fas fa-plus mr-2"></i>Analisa Bisnis Baru--}}
+{{--                        </a>--}}
+{{--                        <a href="{{ route('dashboard') }}"--}}
+{{--                           class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 text-xs sm:text-sm">--}}
+{{--                            <i class="fas fa-home mr-2"></i>Kembali ke Dashboard--}}
+{{--                        </a>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
+{{--            </div>--}}
 
             <!-- Statistics Card -->
             @if($sessions->count())

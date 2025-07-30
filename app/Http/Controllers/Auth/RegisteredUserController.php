@@ -31,10 +31,40 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'phone_number' => ['required', 'string', 'max:20', 'unique:'.User::class],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                'unique:' . User::class,
+                'regex:/@/'
+            ],
+            'phone_number' => [
+                'required',
+                'string',
+                'regex:/^08[0-9]{8,11}$/',
+                'min:10',
+                'max:13',
+                'unique:' . User::class
+            ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'plan' => ['required', 'in:standard,pro'],
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Alamat email tidak valid.',
+            'email.unique' => 'Alamat email sudah terdaftar.',
+            'email.regex' => 'Alamat email harus mengandung karakter @.',
+            'phone_number.required' => 'Nomor handphone wajib diisi.',
+            'phone_number.regex' => 'Nomor handphone harus dimulai dengan 08 dan terdiri dari 10 sampai 13 digit.',
+            'phone_number.min' => 'Nomor handphone minimal 10 digit.',
+            'phone_number.max' => 'Nomor handphone maksimal 13 digit.',
+            'phone_number.unique' => 'Nomor handphone sudah terdaftar.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+            'plan.required' => 'Pilih plan yang diinginkan.',
+            'plan.in' => 'Pilihan plan tidak valid.',
         ]);
 
         $user = User::create([
@@ -50,6 +80,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('front.form');
     }
 }

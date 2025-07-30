@@ -193,16 +193,16 @@
                         <p class="text-gray-600 text-sm">Mulai implementasikan strategi konten Anda hari ini</p>
                     </div>
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                        <button onclick="downloadCalendar()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">
-                            <i class="fas fa-download mr-2"></i>Download PDF
-                        </button>
+{{--                        <button onclick="downloadCalendar()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">--}}
+{{--                            <i class="fas fa-download mr-2"></i>Download PDF--}}
+{{--                        </button>--}}
                         <button onclick="shareCalendar()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300">
                             <i class="fas fa-share-alt mr-2"></i>Bagikan
                         </button>
-                        <a href="{{ route('front.content.form', $session->id) }}"
-                           class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center">
-                            <i class="fas fa-sync-alt mr-2"></i>Generate Ulang
-                        </a>
+{{--                        <a href="{{ route('front.content.form', $session->id) }}"--}}
+{{--                           class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center">--}}
+{{--                            <i class="fas fa-sync-alt mr-2"></i>Generate Ulang--}}
+{{--                        </a>--}}
                     </div>
                 </div>
             </div>

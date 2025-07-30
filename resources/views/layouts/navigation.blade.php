@@ -15,10 +15,23 @@
 {{--                            <a href="{{ route('front.form', ['category' => 2]) }}" class="hover:text-blue-300">Isi Form Analisa 2</a>--}}
                             <a href="{{ route('front.history') }}" class="hover:text-blue-300">Riwayat Analisa Saya</a>
 
-                            <!-- MENU TAMBAHAN (Frontoffice Only) -->
-                            <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="hover:text-blue-300">Generator Foto Product</a>
-                            <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="hover:text-blue-300">Generator Social Media Post</a>
-                            <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="hover:text-blue-300">Prompt Generator VEO3</a>
+                            <!-- MENU TAMBAHAN (Frontoffice Only) - Dropdown -->
+                            <div x-data="{ openGen: false }" class="relative">
+                                <button @click="openGen = !openGen" @keydown.escape="openGen = false"
+                                        class="flex items-center hover:text-blue-300 focus:outline-none">
+                                    <span>Generator</span>
+                                    <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div x-show="openGen" @click.away="openGen = false"
+                                     class="absolute left-0 mt-2 w-56 bg-white text-gray-900 rounded shadow-lg py-2 z-50"
+                                     x-transition>
+                                    <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Foto Product</a>
+                                    <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Social Media Post</a>
+                                    <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Prompt Generator VEO3</a>
+                                </div>
+                            </div>
                         @endif
                     </div>
                 @endauth
@@ -66,9 +79,19 @@
                     <a href="{{ route('front.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Riwayat Analisa Saya</a>
 
                     <!-- MENU TAMBAHAN (Frontoffice Only - MOBILE) -->
-                    <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Generator Foto Product</a>
-                    <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Generator Social Media Post</a>
-                    <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Prompt Generator VEO3</a>
+                    <div x-data="{ openGenMobile: false }" class="mb-1">
+                        <button @click="openGenMobile = !openGenMobile" class="w-full flex items-center justify-between py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300 focus:outline-none">
+                            <span>Generator</span>
+                            <svg :class="{ 'transform rotate-180': openGenMobile }" class="ml-1 h-4 w-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="openGenMobile" class="pl-4" x-transition>
+                            <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Foto Product</a>
+                            <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Social Media Post</a>
+                            <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Prompt Generator VEO3</a>
+                        </div>
+                    </div>
                 @endif
                 <div class="border-t border-gray-700 my-2"></div>
                 <div class="py-2 px-2 text-sm">Hi, {{ auth()->user()->name }}</div>

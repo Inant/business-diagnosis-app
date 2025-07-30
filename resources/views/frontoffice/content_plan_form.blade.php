@@ -21,7 +21,11 @@
                     <div class="p-8 md:p-12">
                         <div class="flex items-center mb-8 pb-6 border-b border-gray-200">
                             <div class="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4">
-                                <i class="fas fa-magic text-white text-xl"></i>
+                                <!-- SVG Calendar Icon (Modern, Simple) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" fill="none"/>
+                                    <path d="M16 3v4M8 3v4M3 9h18" stroke="currentColor"/>
+                                </svg>
                             </div>
                             <div>
                                 <h3 class="text-2xl font-bold text-gray-800">Generator Kalender Konten</h3>
@@ -81,6 +85,20 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Tujuan Pembuatan Konten -->
+                        <div class="mb-8">
+                            <label for="tujuan_pembuatan_konten" class="block text-gray-700 font-semibold mb-4">
+                                <i class="fas fa-bullseye mr-2 text-pink-500"></i>
+                                Tujuan Pembuatan Konten <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="tujuan_pembuatan_konten" name="tujuan_pembuatan_konten"
+                                      class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100 transition-all duration-300 text-lg resize-none"
+                                      rows="3"
+                                      required
+                                      placeholder="Contoh: Untuk promo paket bundling menu A dan B."></textarea>
+                            <p class="text-gray-500 text-sm mt-2">Jelaskan dengan jelas tujuan Anda membuat kalender konten ini, misal: “Untuk promo paket bundling menu A dan B, atau mengenalkan varian baru pada pelanggan setia.”</p>
                         </div>
 
                         <!-- Preview Section -->
@@ -168,6 +186,23 @@
         </div>
     </div>
 
+    <!-- Loading Modal for Content Calendar Generation -->
+    <div id="calendar-generation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+            <div class="mb-6">
+                <div class="w-16 h-16 mx-auto mb-4">
+                    <div class="calendar-loading-spinner"></div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Membuat Kalender Konten</h3>
+                <p class="text-gray-600 text-sm">AI sedang menyusun konten yang menarik untuk bisnis Anda...</p>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div class="calendar-loading-progress bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full"></div>
+            </div>
+            <div class="text-xs text-gray-500" id="calendar-progress-text">Menganalisa bisnis Anda...</div>
+        </div>
+    </div>
+
     <style>
         /* Custom styles for day selection cards */
         .day-option input[type="radio"]:checked + .day-card {
@@ -244,6 +279,105 @@
                 padding-bottom: 1rem;
             }
         }
+
+        /* Loading Modal for Calendar Generation */
+        #calendar-generation-modal {
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #calendar-generation-modal.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Calendar Loading Spinner */
+        .calendar-loading-spinner {
+            width: 64px;
+            height: 64px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Calendar Loading Progress Bar */
+        .calendar-loading-progress {
+            width: 0%;
+            transition: width 4s ease-in-out;
+        }
+
+        /* Modal Animation */
+        #calendar-generation-modal.show .bg-white {
+            animation: modalBounce 0.5s ease-out;
+        }
+
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.3) translateY(-50px);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05) translateY(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Pulse effect untuk calendar spinner */
+        .calendar-loading-spinner::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 72px;
+            height: 72px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Calendar icon animation in spinner */
+        .calendar-loading-spinner::before {
+            content: '\f073';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #8b5cf6;
+            font-size: 20px;
+            animation: bounce 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1.1); }
+        }
     </style>
 
     <script>
@@ -252,6 +386,54 @@
             const generateBtn = document.getElementById('generate-btn');
             const dayOptions = document.querySelectorAll('input[name="days"]');
             const mobileSelect = document.getElementById('days');
+
+            // Function to show calendar generation modal
+            function showCalendarGenerationModal() {
+                const modal = document.getElementById('calendar-generation-modal');
+                const progressBar = modal.querySelector('.calendar-loading-progress');
+                const progressText = document.getElementById('calendar-progress-text');
+
+                modal.classList.remove('hidden');
+
+                // Force reflow
+                modal.offsetHeight;
+
+                modal.classList.add('show');
+
+                // Prevent scrolling
+                document.body.style.overflow = 'hidden';
+
+                // Animate progress bar
+                setTimeout(() => {
+                    progressBar.style.width = '95%';
+                }, 100);
+
+                // Update progress text with different messages
+                const messages = [
+                    'Menganalisa bisnis Anda...',
+                    'Menyusun ide konten...',
+                    'Membuat strategi posting...',
+                    'Mengoptimalkan engagement...',
+                    'Finalizing kalender...'
+                ];
+
+                let messageIndex = 0;
+                const messageInterval = setInterval(() => {
+                    if (messageIndex < messages.length) {
+                        progressText.textContent = messages[messageIndex];
+                        messageIndex++;
+                    } else {
+                        clearInterval(messageInterval);
+                    }
+                }, 800);
+
+                // Prevent modal close
+                modal.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+            }
 
             // Sync mobile select with desktop radio buttons
             if (mobileSelect) {
@@ -274,7 +456,13 @@
 
             // Form submission with loading state
             form.addEventListener('submit', function(e) {
-                // Show loading state
+                // Get selected days for personalized message
+                const selectedDays = document.querySelector('input[name="days"]:checked').value;
+
+                // Show loading modal
+                showCalendarGenerationModal();
+
+                // Update button state
                 generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
                 generateBtn.disabled = true;
                 generateBtn.classList.add('opacity-75');
@@ -282,8 +470,6 @@
                 // Add loading class to form
                 form.classList.add('loading');
 
-                // Optional: Show selected days info
-                const selectedDays = document.querySelector('input[name="days"]:checked').value;
                 console.log('Generating calendar for ' + selectedDays + ' days');
             });
 
@@ -297,6 +483,24 @@
                     this.classList.remove('ring-4', 'ring-purple-100');
                 });
             }
+
+            // Add smooth interactions for day cards
+            const dayCards = document.querySelectorAll('.day-card');
+            dayCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    if (!this.previousElementSibling.checked) {
+                        this.style.transform = 'translateY(-2px)';
+                        this.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.15)';
+                    }
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    if (!this.previousElementSibling.checked) {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = '';
+                    }
+                });
+            });
         });
     </script>
 @endsection

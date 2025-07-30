@@ -48,9 +48,9 @@
                                 <button onclick="printReport()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-300 text-sm">
                                     <i class="fas fa-print mr-1 sm:mr-2"></i><span class="hidden xs:inline">Print</span>
                                 </button>
-                                <button onclick="downloadPDF()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-sm">
-                                    <i class="fas fa-download mr-1 sm:mr-2"></i><span class="hidden xs:inline">PDF</span>
-                                </button>
+{{--                                <button onclick="downloadPDF()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-sm">--}}
+{{--                                    <i class="fas fa-download mr-1 sm:mr-2"></i><span class="hidden xs:inline">PDF</span>--}}
+{{--                                </button>--}}
                             </div>
                         </div>
 
@@ -68,10 +68,10 @@
                                 <span>Analisa ini dibuat berdasarkan informasi yang Anda berikan</span>
                             </div>
                             <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 order-1 lg:order-2">
-                                <a href="{{ route('front.form') }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-center text-sm sm:text-base">
-                                    <i class="fas fa-plus mr-2"></i>Analisa Baru
-                                </a>
-                                <a href="{{ route('front.swot.form', $session->id) }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center text-sm sm:text-base">
+{{--                                <a href="{{ route('front.form') }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-center text-sm sm:text-base">--}}
+{{--                                    <i class="fas fa-plus mr-2"></i>Analisa Baru--}}
+{{--                                </a>--}}
+                                <a href="#" onclick="startFurtherAnalysis('{{ route('front.swot.form', $session->id) }}')" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center text-sm sm:text-base">
                                     <i class="fas fa-chart-bar mr-2"></i>Analisa Lebih Lanjut?
                                 </a>
                             </div>
@@ -191,6 +191,22 @@
                     }, 2000);
                 </script>
             @endif
+        </div>
+    </div>
+
+    <!-- Loading Modal for Further Analysis -->
+    <div id="further-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+            <div class="mb-6">
+                <div class="w-16 h-16 mx-auto mb-4">
+                    <div class="loading-spinner"></div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Mempersiapkan Analisa</h3>
+                <p class="text-gray-600 text-sm">Mohon tunggu, kami sedang menyiapkan analisa lebih lanjut...</p>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="further-loading-progress bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full"></div>
+            </div>
         </div>
     </div>
 
@@ -331,6 +347,86 @@
             .bg-gradient-to-br { background: white !important; }
             .shadow-xl { box-shadow: none !important; }
         }
+
+        /* Loading Modal for Further Analysis */
+        #further-analysis-modal {
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #further-analysis-modal.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            width: 64px;
+            height: 64px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #a855f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Further Analysis Progress Bar */
+        .further-loading-progress {
+            width: 0%;
+            transition: width 3s ease-in-out;
+        }
+
+        /* Modal Animation */
+        #further-analysis-modal.show .bg-white {
+            animation: modalBounce 0.5s ease-out;
+        }
+
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.3) translateY(-50px);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05) translateY(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Pulse effect untuk spinner */
+        .loading-spinner::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 72px;
+            height: 72px;
+            border: 2px solid rgba(168, 85, 247, 0.2);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
     </style>
 
     <script>
@@ -383,5 +479,48 @@
                 });
             });
         });
+
+        function startFurtherAnalysis(url) {
+            // Show loading modal
+            showFurtherAnalysisModal();
+
+            // Simulate some processing time before redirect
+            setTimeout(() => {
+                window.location.href = url;
+            }, 2000); // 2 seconds delay
+        }
+
+        function showFurtherAnalysisModal() {
+            const modal = document.getElementById('further-analysis-modal');
+            modal.classList.remove('hidden');
+
+            // Force reflow untuk memastikan perubahan class diterapkan
+            modal.offsetHeight;
+
+            modal.classList.add('show');
+
+            // Prevent scrolling while modal is open
+            document.body.style.overflow = 'hidden';
+
+            // Trigger progress bar animation
+            setTimeout(() => {
+                const progressBar = modal.querySelector('.further-loading-progress');
+                progressBar.style.width = '95%';
+            }, 100);
+
+            // Add click prevention
+            modal.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+        }
+
+        function hideFurtherAnalysisModal() {
+            const modal = document.getElementById('further-analysis-modal');
+            modal.classList.remove('show');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
     </script>
 @endsection

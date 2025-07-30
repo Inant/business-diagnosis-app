@@ -18,43 +18,53 @@ class GeminiApiService
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY');
-        $this->baseUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash';
+        $this->apiKey = env('SUMOPOD_API_KEY'); // Ubah nama env variable
+        $this->baseUrl = 'https://ai.sumopod.com/v1/chat/completions';
         $this->usdToIdr = env('USD_TO_IDR_RATE', 15800);
     }
 
     public function generateContent($prompt, $userId = null, $sessionId = null, $step = null)
     {
-        $url = $this->baseUrl . ':generateContent?key=' . $this->apiKey;
+        $url = $this->baseUrl;
 
+        // Format body sesuai OpenAI Chat Completions API
         $body = [
-            "contents" => [
+            "model" => "gemini/gemini-2.5-flash", // Pastikan model ini tersedia di SumoPod
+            "messages" => [
                 [
-                    "parts" => [
-                        ["text" => $prompt]
-                    ]
+                    "role" => "user",
+                    "content" => $prompt
                 ]
             ],
-            "generationConfig" => [
-                "temperature" => 0.7,
-            ]
+            "max_tokens" => 4000,
+            "temperature" => 0.7,
+            "stream" => false // Non-streaming untuk versi simple
         ];
 
         $startTime = microtime(true);
-        $response = Http::timeout(120)->post($url, $body);
-        $endTime = microtime(true);
 
+        // Set headers untuk SumoPod
+        $response = Http::timeout(120)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json'
+            ])
+            ->post($url, $body);
+
+        $endTime = microtime(true);
         $responseTime = round(($endTime - $startTime) * 1000, 2);
 
         if ($response->ok()) {
             $data = $response->json();
-            $generatedText = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'Tidak ada respon dari Gemini.';
 
-            $usageMetadata = $data['usageMetadata'] ?? null;
+            // Parse response sesuai format OpenAI
+            $generatedText = $data['choices'][0]['message']['content'] ?? 'Tidak ada respon dari Gemini.';
 
-            $inputTokens = $usageMetadata['promptTokenCount'] ?? $this->estimateTokens($prompt);
-            $outputTokens = $usageMetadata['candidatesTokenCount'] ?? $this->estimateTokens($generatedText);
-            $totalTokens = $usageMetadata['totalTokenCount'] ?? ($inputTokens + $outputTokens);
+            // Parse usage data dari format OpenAI
+            $usage = $data['usage'] ?? null;
+            $inputTokens = $usage['prompt_tokens'] ?? $this->estimateTokens($prompt);
+            $outputTokens = $usage['completion_tokens'] ?? $this->estimateTokens($generatedText);
+            $totalTokens = $usage['total_tokens'] ?? ($inputTokens + $outputTokens);
 
             // Hitung biaya dengan harga yang benar
             $inputCostUsd = ($inputTokens / 1000000) * $this->inputTokenPriceUsd;
@@ -78,7 +88,7 @@ class GeminiApiService
                 'output_cost_idr' => round($outputCostIdr, 4),
                 'total_cost_idr' => round($totalCostIdr, 4),
                 'response_time_ms' => $responseTime,
-                'model' => 'gemini-2.0-flash',
+                'model' => 'gemini-2.5-flash',
                 'status' => 'success'
             ]);
 
@@ -107,15 +117,16 @@ class GeminiApiService
                 'output_cost_idr' => 0,
                 'total_cost_idr' => 0,
                 'response_time_ms' => $responseTime,
-                'model' => 'gemini-2.0-flash',
+                'model' => 'gemini-2.5-flash',
                 'status' => 'error',
                 'error_message' => $response->body()
             ]);
 
-            throw new \Exception("Gemini API Error: " . $response->body());
+            throw new \Exception("SumoPod Gemini API Error: " . $response->body());
         }
     }
 
+    // Method lainnya tetap sama
     private function estimateTokens($text)
     {
         return max(1, intval(strlen($text) / 4));
@@ -125,7 +136,7 @@ class GeminiApiService
     {
         try {
             ApiUsage::create($data);
-            Log::info('Gemini API Usage logged', $data);
+            Log::info('Gemini API Usage logged via SumoPod', $data);
         } catch (\Exception $e) {
             Log::error('Failed to log API usage: ' . $e->getMessage());
         }

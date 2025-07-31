@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use App\Models\Question;
 use App\Models\ContentIdea;
 use App\Models\ShootingScript;
+use App\Models\AdsResult;
 use Illuminate\Support\Facades\Http;
 use App\Services\GeminiApiService; // Import service baru
 
@@ -75,12 +76,16 @@ class FormController extends Controller
         // Debug: Log hasil service
         \Log::info('Gemini service result:', $result);
 
+        $profilDnaBisnis = $this->extractJson($result['content']);
+//        return $profilDnaBisnis;
+
         // Debug: Check apa yang akan disimpan
         $dataToSave = [
             'user_session_id' => $session->id,
             'step' => 'diagnosis',
             'prompt' => $prompt,
             'ai_response' => $result['content'],
+            'profil_dna_bisnis' => !empty($profilDnaBisnis) ? $profilDnaBisnis : null,
             'tokens_used' => $result['usage']['total_tokens'],
             'cost_idr' => $result['usage']['total_cost_idr'],
             'response_time_ms' => $result['usage']['response_time_ms']
@@ -96,6 +101,19 @@ class FormController extends Controller
         ]);
 
         return redirect()->route('front.result', ['session' => $session->id]);
+    }
+
+    protected function extractJson($responseText)
+    {
+        // Cari blok ```json ... ```
+        if (preg_match('/```json\s*(\{.*\})\s*```/is', $responseText, $matches)) {
+            return $matches[1]; // Sudah dalam bentuk string JSON
+        }
+        // Fallback: cari kurung kurawal pertama sampai terakhir
+        if (preg_match('/(\{.*\})/s', $responseText, $matches)) {
+            return $matches[1];
+        }
+        return null;
     }
 
     public function showResult($session_id)
@@ -131,33 +149,38 @@ class FormController extends Controller
         $contentString = implode("\n\n", $list);
 
         $prompt = <<<EOP
-#perkenalkan diri anda adalah gurita AI yang dibuat oleh the boss whisperer seorang konsultan bisnis. anda telah diajari selama 5 tahun berbagai bisnis sehingga sudah handal.
+# PERKENALKAN DIRI
+Anda adalah Gurita AI yang dibuat oleh The Boss Whisperer, seorang konsultan bisnis kawakan. Anda telah diajari selama 5 tahun berbagai bisnis sehingga sudah sangat handal.
 
 # PERAN
-Kamu adalah seorang Konsultan Bisnis Strategis dari firma top dunia (seperti McKinsey atau BCG). Kamu sangat tajam, analitis, dan mampu melihat pola yang tidak dilihat orang lain. Tugasmu bukan memberi solusi, tetapi memberikan diagnosis yang akurat dan membuka pikiran.
+Kamu adalah Konsultan Bisnis Strategis (ala McKinsey/BCG), sangat analitis, dan melihat pola yang tidak kasat mata. Tugasmu bukan memberi solusi, tetapi memberikan diagnosis yang tajam.
 
 # KONTEKS
-Kamu baru saja menyelesaikan sesi wawancara awal dengan seorang pemilik bisnis. Berikut adalah rangkuman jawaban mentah dari klien tersebut.
+Baru saja selesai sesi wawancara dengan pemilik bisnis. Berikut adalah jawaban-jawaban mentah klien:
 
 $contentString
 
 # TUGAS
-1.  **Lakukan Diagnosis Awal:** Berdasarkan keseluruhan konteks, tulis sebuah diagnosis yang tajam. Identifikasi **kontradiksi fundamental** yang paling signifikan dalam bisnis ini (misal: menjual produk premium dengan cara murah, ingin melayani semua orang, dll).
-2.  **Rumuskan Masalah Inti:** Sintesiskan diagnosis tersebut menjadi **satu paragraf** yang menjelaskan apa **Masalah Inti (Core Problem)** yang sebenarnya, di mana tantangan yang disebutkan klien hanyalah gejalanya.
-3.  **Ajukan Pertanyaan Reflektif:** Akhiri analisis dengan satu **pertanyaan reflektif** yang kuat. Pertanyaan ini harus dirancang untuk membuat pemilik bisnis berhenti sejenak dan berpikir tentang Masalah Inti yang baru saja diungkap.
-4.  Analisislah keseluruhan jawaban di atas. Kemudian, sintesiskan semua informasi tersebut menjadi sebuah **"Profil DNA Bisnis"** yang terstruktur. Gunakan field-field berikut untuk ringkasanmu:
+1. **Diagnosis Awal:** Tulis diagnosis paling tajam. Identifikasi *kontradiksi fundamental* paling signifikan dalam bisnis ini.
+2. **Masalah Inti:** Sintesis diagnosis menjadi **satu paragraf** yang menjelaskan apa masalah inti mereka (core problem) di mana tantangan hanyalah gejala.
+3. **Pertanyaan Reflektif:** Tulis satu pertanyaan reflektif yang benar-benar menggelitik pemilik bisnis tentang masalah inti yang kamu temukan.
+4. **Profil DNA Bisnis:** Analisa keseluruhan jawaban, lalu sintesis dalam format **JSON VALID** dengan field sebagai berikut:
 
-* `Nama_Bisnis`: [Jika disebutkan, tulis di sini]
-* `Deskripsi_Singkat`: [1-2 kalimat yang menjelaskan inti bisnis]
-* `Produk_Layanan_Utama`: [Sebutkan dalam bentuk daftar poin]
-* `Target_Pasar_Spesifik`: [Jelaskan siapa target pasarnya secara ringkas]
-* `Masalah_Kunci_yang_Diselesaikan`: [Jelaskan nilai jual utama dalam 1 kalimat]
-* `Kekuatan_Unik_Teridentifikasi`: [Bukan hanya apa yang diklaim pengguna, tapi apa kekuatan sejati yang kamu simpulkan dari jawaban. Misal: "Pengalaman 20 tahun", "Spesialisasi pada merek premium YKK AP", "Reputasi personal pemilik"]
-* `Tantangan_Strategis`: [Satu kalimat yang merangkum masalah inti/strategis mereka]
-* `Visi_Jangka_Panjang`: [Tujuan besar mereka dalam 1 kalimat]
+```json
+{
+  "Nama_Bisnis": "[Jika disebutkan, tulis di sini]",
+  "Deskripsi_Singkat": "[1-2 kalimat tentang inti bisnis]",
+  "Produk_Layanan_Utama": ["...daftar poin..."],
+  "Target_Pasar_Spesifik": "[deskripsi ringkas target pasar]",
+  "Masalah_Kunci_yang_Diselesaikan": "[nilai jual utama dalam 1 kalimat]",
+  "Kekuatan_Unik_Teridentifikasi": "[kekuatan sejati bisnis, bukan sekadar klaim]",
+  "Tantangan_Strategis": "[1 kalimat masalah inti/strategis]",
+  "Visi_Jangka_Panjang": "[1 kalimat tujuan besar]"
+}
 
 # FORMAT & GAYA
-* Gunakan heading (###) untuk setiap bagian: `### Diagnosis Awal`, `### Masalah Inti Anda`, dan `### Sebuah Pertanyaan untuk Anda`.
+* Untuk diagnosis, masalah inti, dan pertanyaan reflektif, gunakan heading: ### Diagnosis Awal, ### Masalah Inti Anda, dan ### Sebuah Pertanyaan untuk Anda.
+* Untuk Profil DNA Bisnis, tampilkan HANYA dalam format JSON valid seperti di atas. Tidak perlu penjelasan, tidak perlu heading tambahan.
 * Gaya bahasa harus lugas, profesional, dan to the point. Hindari basa-basi.
 * **PENTING:** Jangan berikan solusi atau rekomendasi marketing apa pun di tahap ini. Fokus 100% pada diagnosis masalah.
 
@@ -270,9 +293,9 @@ $diagnosisText
 # TUGAS
 Berdasarkan keseluruhan konteks di atas (Bagian A dan B), buatkan sebuah **Peta Jalan Marketing** yang komprehensif. Peta jalan ini harus menjadi solusi praktis untuk Masalah Inti yang ada. Rencana harus mencakup:
 
-1.  **Analisis SWOT yang Jujur:** Berikan analisis SWOT dalam format poin-poin.
-2.  **Rumusan Ulang Unique Selling Proposition (USP):** Ciptakan satu kalimat USP baru yang kuat dan relevan.
-3.  **Profil Persona Pembeli Utama:** Buat satu persona pembeli yang detail.
+1.  **Analisis SWOT yang Jujur:** Berikan analisis SWOT dalam format point dan narasi yang meyakinkan serta berikan perumpamaan yang relevan dan dekat dengan pengguna. Analisa menyebutkan SWOT dalam bahasa Indonesia.
+2.  **Rumusan Ulang Unique Selling Proposition (USP):** Ciptakan satu kalimat USP baru yang kuat dan relevan. Pada bagian selanjutnya jelaskan kalimat yang Anda ciptakan agar user bisa memahami hasil Anda.
+3.  **Profil Persona Pembeli Utama:** Buat tiga sampai empat persona pembeli yang detail dan memungkinkan menjadi target market anda.
 4.  **Strategi Konten 3 Pilar Berkelanjutan:** Berikan 2-3 ide konten konkret untuk setiap pilar (Edukasi, Interaksi, Inspirasi).
 5.  **Analisis Digital Marketing Tambahan:**
     * **Peta Perjalanan Pelanggan (Mini):** Jelaskan 3 tahap (Awareness, Consideration, Decision) dengan satu ide aktivitas marketing per tahap.
@@ -755,6 +778,187 @@ EOP;
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function showAdsForm($session_id)
+    {
+        return view('frontoffice.ads_form', compact('session_id'));
+    }
+
+    public function generateAds(Request $request, $session_id)
+    {
+        $user = auth()->user();
+        $request->validate([
+            'platform' => 'required|in:facebook_instagram,tiktok,google_search',
+            'goal'     => 'required',
+            'product'  => 'required',
+            'offer'    => 'nullable',
+        ]);
+
+        // Load context dari AI Analysis sebelumnya (diagnosis, SWOT, USP, Persona, dsb)
+        $session = UserSession::findOrFail($session_id);
+
+        $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
+        $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
+        $contentPlan = AiResponse::where('user_session_id', $session_id)->where('step', 'content_plan')->first();
+
+        // Generate prompt sesuai platform
+        $prompt = $this->generateAdsPrompt(
+            $request->platform,
+            $request->goal,
+            $request->product,
+            $request->offer,
+            !empty($diagnosis->profil_dna_bisnis) ? $diagnosis->profil_dna_bisnis : ($diagnosis ? $diagnosis->ai_response : ''),
+            $swot ? $swot->ai_response : ''
+        );
+
+        // Request ke Gemini (gunakan service-mu sendiri, sesuai yang dipakai untuk step lain)
+        $result = $this->geminiService->generateContent(
+            $prompt,
+            $user->id,
+            $session_id,
+            'ads'
+        );
+
+        // Simpan ke DB
+        $adsResult = AdsResult::create([
+            'user_id'           => $user->id,
+            'user_session_id'   => $session_id,
+            'platform'          => $request->platform,
+            'goal'              => $request->goal,
+            'product'           => $request->product,
+            'offer'             => $request->offer,
+            'prompt'            => $prompt,
+            'ai_response'       => $result['content'],
+            'tokens_used'       => $result['usage']['total_tokens'] ?? null,
+            'cost_idr'          => $result['usage']['total_cost_idr'] ?? null,
+            'response_time_ms'  => $result['usage']['response_time_ms'] ?? null,
+        ]);
+
+        // Tampilkan hasil
+        return view('frontoffice.ads_result', [
+            'adsResult' => $adsResult,
+            'session'   => $session,
+        ]);
+    }
+
+    protected function generateAdsPrompt($platform, $goal, $product, $offer, $diagnosis, $swot)
+    {
+        if ($platform === 'google_search') {
+            return <<<EOP
+# PERAN
+Kamu adalah seorang Google Ads Specialist dan Direct-Response Copywriter. Keahlian utamamu adalah riset keyword berbasis niat pencarian (search intent) dan merangkai kata-kata yang memaksimalkan Click-Through Rate (CTR) dan konversi dalam batasan karakter yang ketat.
+
+# KONTEKS
+Kamu akan merancang sebuah kampanye Google Search Ads untuk sebuah bisnis. Kamu memiliki akses penuh ke data fundamental bisnis dan detail tujuan kampanye.
+
+**BAGIAN A: ASET BISNIS & MARKETING (Data Tersimpan)**
+* Profil Bisnis Lengkap: $diagnosis
+* Analisis SWOT: $swot
+
+**BAGIAN B: INFORMASI KAMPANYE IKLAN (Input Baru dari Pengguna)**
+* **Tujuan Utama Iklan:** $goal
+* **Produk/Layanan yang Dipromosikan:** $product
+* **Penawaran Spesial (Jika Ada):** $offer
+
+# TUGAS
+Berdasarkan PERAN dan KESELURUHAN KONTEKS di atas, rancang sebuah **"Struktur Kampanye Google Ads"** yang solid. Rencana ini harus mencakup:
+
+1.  **Riset Keyword dan Grup Iklan (Ad Group):**
+    * Sarankan **2 hingga 3 Grup Iklan** yang berbeda berdasarkan tema atau intensi pencarian yang spesifik (contoh: Grup 'Jasa', Grup 'Harga', Grup 'Kompetitor').
+    * Untuk setiap grup, berikan **5-7 contoh keyword** yang sangat relevan.
+    * Untuk setiap keyword, sarankan **Jenis Pencocokan (Match Type)** yang paling efektif (pilih antara: `Phrase` atau `Exact`) dan berikan **alasan singkat** mengapa jenis itu dipilih untuk memaksimalkan relevansi dan budget.
+
+2.  **Pembuatan Naskah Iklan Responsif (Responsive Search Ad):**
+    * Untuk **SETIAP** Grup Iklan yang kamu sarankan, buatkan **1 contoh Iklan Responsif** yang optimal.
+    * Iklan tersebut harus terdiri dari:
+        * **7 contoh Headline** (maksimal 30 karakter per headline). Pastikan headlines relevan dengan tema keyword di grupnya dan mengandung USP.
+        * **3 contoh Description** (maksimal 90 karakter per deskripsi). Deskripsi harus menjelaskan detail penawaran dan membangun kepercayaan.
+
+# FORMAT
+Sajikan output dalam format terstruktur yang jelas dan mudah dibaca, diorganisir per Grup Iklan.
+
+**### STRUKTUR KAMPANYE GOOGLE ADS ANDA ###**
+
+**## GRUP IKLAN 1: [Nama Grup Iklan, misal: Jasa Pemasangan Profesional] ##**
+
+**1. Rekomendasi Keyword & Jenis Pencocokan:**
+* `Keyword`: [Contoh keyword 1], `Jenis`: [Phrase/Exact], `Alasan`: [Alasan singkat]
+* `Keyword`: [Contoh keyword 2], `Jenis`: [Phrase/Exact], `Alasan`: [Alasan singkat]
+* ... (dan seterusnya)
+
+**2. Contoh Iklan Responsif:**
+* **Headlines:**
+    * Headline 1: [Contoh headline 1]
+    * Headline 2: [Contoh headline 2]
+    * ... (dan seterusnya sampai 7)
+* **Descriptions:**
+    * Description 1: [Contoh deskripsi 1]
+    * Description 2: [Contoh deskripsi 2]
+    * Description 3: [Contoh deskripsi 3]
+
+**## GRUP IKLAN 2: [Nama Grup Iklan, misal: Harga & Produk YKK AP] ##**
+(Ulangi struktur di atas untuk Grup Iklan kedua)
+
+**(Opsional) ## GRUP IKLAN 3: [Nama Grup Iklan lainnya] ##**
+(Ulangi struktur di atas untuk Grup Iklan ketiga)
+EOP;
+        } else {
+            return <<<EOP
+# PERAN
+Kamu adalah seorang Digital Advertising Strategist senior yang bekerja di agensi periklanan ternama. Kamu ahli dalam merumuskan keseluruhan paket kampanye dari A sampai Z: mulai dari naskah (copy), penargetan audiens (targeting), hingga konsep materi kreatif (creative brief).
+
+# KONTEKS
+**BAGIAN A: ASET BISNIS & MARKETING (Data Tersimpan)**
+* Profil Bisnis Lengkap: $diagnosis
+* Analisis SWOT: $swot
+
+**BAGIAN B: INFORMASI KAMPANYE IKLAN (Input Baru dari Pengguna)**
+* Platform Iklan: $platform
+* Tujuan Utama Iklan: $goal
+* Produk/Layanan yang Dipromosikan: $product
+* Penawaran Spesial: $offer
+
+# TUGAS
+Berdasarkan PERAN dan KESELURUHAN KONTEKS di atas, buatkan sebuah **"Paket Kampanye Iklan"** yang lengkap. Paket ini harus berisi 3 komponen utama untuk **SATU** variasi iklan yang paling direkomendasikan.
+
+1.  **Naskah Iklan (Ad Copy):**
+    * Buat **satu** naskah iklan terbaik menggunakan formula AIDA.
+    * **Wajib sesuaikan** gaya dan formatnya berdasarkan **Platform Iklan** yang dipilih.
+
+2.  **Rekomendasi Settingan Iklan (Target Audiens):**
+    * Berikan rekomendasi penargetan audiens yang spesifik untuk platform yang dipilih.
+    * **Wajib** dasarkan rekomendasi minat/perilaku pada data **Persona Pembeli Utama** yang ada di konteks.
+
+3.  **Brief Aset Kreatif (Visual/Video):**
+    * Berikan sebuah brief singkat dan jelas untuk materi visual (gambar/pamflet/video) yang akan mendukung naskah iklan.
+    * Konsep visual harus selaras dengan naskah iklan dan USP.
+
+# FORMAT
+Sajikan output dalam format terstruktur yang jelas. Gunakan field-field berikut:
+
+**### PAKET KAMPANYE IKLAN ANDA ###**
+
+**1. Naskah Iklan (Ad Copy):**
+* `Platform`: [Sebutkan platform yang dipilih]
+* `Headline_atau_Hook`: [Isi di sini]
+* `Body_Copy`: [Isi di sini]
+* `Call_to_Action_Suggestion`: [Isi di sini]
+
+**2. Rekomendasi Target Audiens:**
+* `Lokasi`: [Saran lokasi, misal: Surabaya & Sidoarjo (radius +25km)]
+* `Umur`: [Saran rentang umur, misal: 30 - 55 tahun]
+* `Gender`: [Saran gender, misal: Semua]
+* `Minat_dan_Perilaku_Detail`: [Saran minat/perilaku berdasarkan Persona. WAJIB sebutkan 3-5 minat, misal: "Real Estate Investing", "Arsitektur", "Pengunjung Pameran Properti", "Mengikuti akun Developer Properti X & Y"]
+
+**3. Brief Aset Kreatif:**
+* `Jenis_Aset`: [Saran jenis, misal: Video singkat 15 detik atau Carousel 3-slide]
+* `Konsep_Utama`: [Ide besar dalam 1 kalimat. Misal: "Menampilkan proses pemasangan kusen yang cepat dan rapi oleh tim profesional kami."]
+* `Visual_yang_Ditampilkan`: [Deskripsi visual. Misal: "Slide 1: Foto 'before' kusen kayu yang lapuk. Slide 2: Video timelapse proses pemasangan kusen aluminium. Slide 3: Foto 'after' hasil akhir yang elegan dan modern."]
+* `Teks_Overlay_di_Visual`: [Teks singkat yang muncul di video/gambar. Misal: "Ganti Kusen Tanpa Ribet!", "Garansi 10 Tahun"]
+* `Suasana_Mood`: [Mood yang ingin diciptakan. Misal: Profesional, Terpercaya, dan Memuaskan]
+EOP;
+        }
     }
 
 

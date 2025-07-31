@@ -48,15 +48,12 @@
                                 <button onclick="printReport()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-300 text-sm">
                                     <i class="fas fa-print mr-1 sm:mr-2"></i><span class="hidden xs:inline">Print</span>
                                 </button>
-{{--                                <button onclick="downloadPDF()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-300 text-sm">--}}
-{{--                                    <i class="fas fa-download mr-1 sm:mr-2"></i><span class="hidden xs:inline">PDF</span>--}}
-{{--                                </button>--}}
                             </div>
                         </div>
 
                         <!-- Formatted Analysis Content -->
                         <div id="analysis-content" class="prose prose-sm sm:prose-lg max-w-none">
-                            {!! formatAnalysisContent($diagnosis->ai_response) !!}
+                            {!! formatAnalysisContentWithJSON($diagnosis->ai_response) !!}
                         </div>
                     </div>
 
@@ -68,9 +65,6 @@
                                 <span>Analisa ini dibuat berdasarkan informasi yang Anda berikan</span>
                             </div>
                             <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 order-1 lg:order-2">
-{{--                                <a href="{{ route('front.form') }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-center text-sm sm:text-base">--}}
-{{--                                    <i class="fas fa-plus mr-2"></i>Analisa Baru--}}
-{{--                                </a>--}}
                                 <a href="#" onclick="startFurtherAnalysis('{{ route('front.swot.form', $session->id) }}')" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center text-sm sm:text-base">
                                     <i class="fas fa-chart-bar mr-2"></i>Analisa Lebih Lanjut?
                                 </a>
@@ -332,6 +326,124 @@
             font-weight: 600;
         }
 
+        /* JSON Summary Card Styles */
+        .json-summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .json-summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .json-summary-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .json-summary-icon {
+            width: 3rem;
+            height: 3rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .json-summary-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .json-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .json-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .json-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .json-item-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .json-item-value {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+
+        .json-item-value ul {
+            margin: 0;
+            padding-left: 1rem;
+            list-style-type: disc;
+        }
+
+        .json-item-value li {
+            margin: 0.25rem 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .json-summary-card {
+                padding: 1rem;
+                margin: 1.5rem 0;
+            }
+
+            .json-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .json-summary-icon {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+
+            .json-summary-title {
+                font-size: 1.125rem;
+            }
+        }
+
         /* Responsive breakpoint for extra small screens */
         @media (min-width: 475px) {
             .xs\:inline { display: inline !important; }
@@ -346,6 +458,11 @@
             body { background: white !important; }
             .bg-gradient-to-br { background: white !important; }
             .shadow-xl { box-shadow: none !important; }
+            .json-summary-card {
+                background: #f8f9fa !important;
+                color: #333 !important;
+                border: 2px solid #dee2e6 !important;
+            }
         }
 
         /* Loading Modal for Further Analysis */

@@ -20,49 +20,48 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+//ADMIN
 Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
+    // Question management
     Route::resource('questions', QuestionController::class);
 
-    // Route untuk usage statistics
+    // User session
+    Route::get('sessions', [\App\Http\Controllers\Backoffice\SessionController::class, 'index'])->name('backoffice.sessions');
+    Route::get('sessions/{session}', [\App\Http\Controllers\Backoffice\SessionController::class, 'show'])->name('backoffice.sessions.show');
+
+    // Usage statistics
     Route::get('/usage-stats', [FormController::class, 'showUsageStats'])->name('backoffice.usage_stats');
 
-    // Route untuk export usage ke CSV/Excel
+    // Export usage ke CSV/Excel
     Route::get('/usage-export', [FormController::class, 'exportUsage'])->name('backoffice.usage_export');
 });
 
-//analisa awal
+//USER
 Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    //analisa awal
     Route::get('form', [FormController::class, 'showForm'])->name('front.form');
     Route::post('form', [FormController::class, 'submitForm'])->name('front.form.submit');
     Route::get('result/{session}', [FormController::class, 'showResult'])->name('front.result');
-});
 
-// Step 2: Analisa SWOT
-Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    // Step 2: Analisa SWOT
     Route::get('swot/{session}', [FormController::class, 'showSwotForm'])->name('front.swot.form');
     Route::post('swot/{session}', [FormController::class, 'submitSwot'])->name('front.swot.submit');
-});
 
-//konten generator
-Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    // Content plan
     Route::get('content-plan/{session}', [FormController::class, 'showContentPlanForm'])->name('front.content.form');
     Route::post('content-plan/{session}', [FormController::class, 'generateContentPlan'])->name('front.content.generate');
-});
 
-//shooting script
-Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    //shooting script
     Route::get('shooting-script/{contentIdea}', [FormController::class, 'showShootingScriptForm'])->name('front.shooting.form');
     Route::post('shooting-script/{contentIdea}', [FormController::class, 'generateShootingScript'])->name('front.shooting.generate');
-});
 
+    // Generate iklan
+        // Form
+    Route::get('/session/{session}/ads', [FormController::class, 'showAdsForm'])->name('front.ads.form');
+        // Proses Generate
+    Route::post('/session/{session}/ads/generate', [FormController::class, 'generateAds'])->name('front.ads.generate');
 
-Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
-    Route::get('sessions', [\App\Http\Controllers\Backoffice\SessionController::class, 'index'])->name('backoffice.sessions');
-    Route::get('sessions/{session}', [\App\Http\Controllers\Backoffice\SessionController::class, 'show'])->name('backoffice.sessions.show');
-});
-
-
-Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    // History analisa
     Route::get('history', [FormController::class, 'history'])->name('front.history');
 });
 

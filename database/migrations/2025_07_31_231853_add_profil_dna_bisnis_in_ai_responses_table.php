@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('plan')->after('role')->nullable()->comment('standart/pro');
+        Schema::table('ai_responses', function (Blueprint $table) {
+            $table->text('profil_dna_bisnis')->after('ai_response')->nullable();
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('plan');
+        Schema::table('ai_responses', function (Blueprint $table) {
+            $table->dropColumn('profil_dna_bisnis');
         });
     }
 };

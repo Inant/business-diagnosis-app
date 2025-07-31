@@ -31,8 +31,7 @@ class AuthenticatedSessionController extends Controller
                 'string',
                 'regex:/^08[0-9]{8,11}$/',
                 'min:10',
-                'max:13',
-                'unique:' . User::class
+                'max:13'
             ],
             'password' => ['required']
         ], [

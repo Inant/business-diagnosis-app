@@ -1,202 +1,190 @@
 @extends('layouts.app')
+
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
-        <div class="max-w-2xl mx-auto">
-            <!-- Header Section -->
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+        <div class="max-w-4xl mx-auto px-4">
+            <!-- Header -->
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4">
-                    <i class="fas fa-magic text-white text-2xl"></i>
+                    <i class="fas fa-ad text-white text-2xl"></i>
                 </div>
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Generate Iklan Bisnis</h1>
-                <p class="text-gray-600">Buat iklan yang menarik untuk berbagai platform dengan mudah</p>
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">Generate Iklan Bisnis</h1>
+                <p class="text-gray-600">Buat strategi iklan yang efektif berdasarkan analisa bisnis Anda</p>
             </div>
 
-            <!-- Form Card -->
-            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
-                <form action="{{ route('front.ads.generate', $session_id) }}" method="POST" class="space-y-6" id="adForm">
+            <!-- Ads Generator Form -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <form method="POST" action="{{ route('front.ads.generate') }}" id="ads-form">
                     @csrf
 
-                    <!-- Platform Selection -->
-                    <div class="space-y-2">
-                        <label class="flex items-center text-sm font-semibold text-gray-700">
-                            <i class="fas fa-bullhorn text-blue-500 mr-2"></i>
-                            Platform Iklan
-                        </label>
-                        <select name="platform" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white">
-                            <option value="">-- Pilih Platform --</option>
-                            <option value="facebook_instagram">📱 Facebook/Instagram Ads</option>
-                            <option value="tiktok">🎵 Tiktok Ads</option>
-                            <option value="google_search">🔍 Google Search Ads</option>
-                        </select>
-                    </div>
+                    <!-- Form Header -->
+                    <div class="p-8 md:p-12">
+                        <div class="flex items-center mb-8 pb-6 border-b border-gray-200">
+                            <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
+                                <i class="fas fa-bullhorn text-white text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800">Generator Iklan</h3>
+                                <p class="text-gray-500">Pilih platform dan detail kampanye Anda</p>
+                            </div>
+                        </div>
 
-                    <!-- Goal Selection -->
-                    <div class="space-y-2">
-                        <label class="flex items-center text-sm font-semibold text-gray-700">
-                            <i class="fas fa-target text-green-500 mr-2"></i>
-                            Tujuan Utama Iklan
-                        </label>
-                        <select name="goal" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white">
-                            <option value="">-- Pilih Tujuan --</option>
-                            <option value="website">🌐 Meningkatkan kunjungan ke Website/Toko Online</option>
-                            <option value="whatsapp">💬 Mendapatkan lebih banyak chat WhatsApp/DM</option>
-                            <option value="penjualan">💰 Meningkatkan penjualan produk spesifik</option>
-                            <option value="brand">✨ Memperkenalkan merek kepada audiens baru</option>
-                        </select>
-                    </div>
+                        <!-- Platform Selection -->
+                        <div class="mb-8">
+                            <label class="block text-gray-700 font-semibold mb-4">
+                                <i class="fas fa-share-alt mr-2 text-blue-500"></i>
+                                Pilih Platform Iklan
+                            </label>
 
-                    <!-- Product Input -->
-                    <div class="space-y-2">
-                        <label class="flex items-center text-sm font-semibold text-gray-700">
-                            <i class="fas fa-box text-purple-500 mr-2"></i>
-                            Produk/Layanan yang Dipromosikan
-                        </label>
-                        <input type="text"
-                               name="product"
-                               required
-                               placeholder="Contoh: Jasa Pemasangan Kusen Tipe A"
-                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400">
-                    </div>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="platform-option">
+                                    <input type="radio" name="platform" value="facebook_instagram" id="facebook_instagram" class="hidden" required>
+                                    <label for="facebook_instagram" class="platform-card block p-6 border-2 border-gray-200 rounded-xl text-center cursor-pointer transition-all duration-300 hover:border-blue-300 hover:shadow-md">
+                                        <i class="fab fa-facebook text-3xl text-blue-600 mb-3"></i>
+                                        <div class="text-lg font-bold text-gray-800 mb-2">Facebook & Instagram</div>
+                                        <div class="text-sm text-gray-600">Iklan visual dengan targeting detail</div>
+                                    </label>
+                                </div>
 
-                    <!-- Special Offer Input -->
-                    <div class="space-y-2">
-                        <label class="flex items-center text-sm font-semibold text-gray-700">
-                            <i class="fas fa-gift text-red-500 mr-2"></i>
-                            Penawaran Spesial
-                            <span class="text-xs text-gray-500 ml-1">(Opsional)</span>
-                        </label>
-                        <input type="text"
-                               name="offer"
-                               placeholder="Contoh: Diskon 20% hingga akhir bulan"
-                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400">
+                                <div class="platform-option">
+                                    <input type="radio" name="platform" value="tiktok" id="tiktok" class="hidden">
+                                    <label for="tiktok" class="platform-card block p-6 border-2 border-gray-200 rounded-xl text-center cursor-pointer transition-all duration-300 hover:border-pink-300 hover:shadow-md">
+                                        <i class="fab fa-tiktok text-3xl text-pink-600 mb-3"></i>
+                                        <div class="text-lg font-bold text-gray-800 mb-2">TikTok</div>
+                                        <div class="text-sm text-gray-600">Video kreatif untuk audiens muda</div>
+                                    </label>
+                                </div>
+
+                                <div class="platform-option">
+                                    <input type="radio" name="platform" value="google_search" id="google_search" class="hidden">
+                                    <label for="google_search" class="platform-card block p-6 border-2 border-gray-200 rounded-xl text-center cursor-pointer transition-all duration-300 hover:border-green-300 hover:shadow-md">
+                                        <i class="fab fa-google text-3xl text-green-600 mb-3"></i>
+                                        <div class="text-lg font-bold text-gray-800 mb-2">Google Search</div>
+                                        <div class="text-sm text-gray-600">Iklan berbasis keyword pencarian</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Goal -->
+                        <div class="mb-8">
+                            <label for="goal" class="block text-gray-700 font-semibold mb-4">
+                                <i class="fas fa-bullseye mr-2 text-green-500"></i>
+                                Tujuan Utama Iklan <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="goal" name="goal" required
+                                      class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 text-lg resize-none"
+                                      rows="3"
+                                      placeholder="Contoh: Meningkatkan penjualan paket bundling menu A dan B dengan target 100 transaksi per bulan"></textarea>
+                            <p class="text-gray-500 text-sm mt-2">Jelaskan dengan spesifik apa yang ingin Anda capai dengan iklan ini</p>
+                        </div>
+
+                        <!-- Product/Service -->
+                        <div class="mb-8">
+                            <label for="product" class="block text-gray-700 font-semibold mb-4">
+                                <i class="fas fa-box mr-2 text-purple-500"></i>
+                                Produk/Layanan yang Dipromosikan <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="product" name="product" required
+                                      class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 text-lg resize-none"
+                                      rows="3"
+                                      placeholder="Contoh: Paket bundling menu ayam geprek + nasi + minuman dengan harga Rp 25.000"></textarea>
+                            <p class="text-gray-500 text-sm mt-2">Sebutkan produk/layanan secara detail termasuk harga jika ada</p>
+                        </div>
+
+                        <!-- Special Offer -->
+                        <div class="mb-8">
+                            <label for="offer" class="block text-gray-700 font-semibold mb-4">
+                                <i class="fas fa-gift mr-2 text-orange-500"></i>
+                                Penawaran Spesial (Opsional)
+                            </label>
+                            <textarea id="offer" name="offer"
+                                      class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 text-lg resize-none"
+                                      rows="2"
+                                      placeholder="Contoh: Diskon 20% untuk pembelian pertama, gratis ongkir, buy 1 get 1, dll"></textarea>
+                            <p class="text-gray-500 text-sm mt-2">Tambahkan promo atau penawaran khusus untuk meningkatkan daya tarik</p>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="mb-8 p-6 bg-gray-50 rounded-xl">
+                            <h4 class="font-semibold text-gray-800 mb-3">
+                                <i class="fas fa-eye mr-2 text-blue-500"></i>
+                                Yang Akan Anda Dapatkan:
+                            </h4>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div class="flex items-start">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                                        <i class="fas fa-check text-green-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-medium text-gray-800">Strategi Iklan Lengkap</h5>
+                                        <p class="text-gray-600 text-sm">Copy iklan, targeting, dan creative brief</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                                        <i class="fas fa-users text-blue-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-medium text-gray-800">Rekomendasi Targeting</h5>
+                                        <p class="text-gray-600 text-sm">Audiens yang tepat berdasarkan analisa bisnis</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="pt-4">
-                        <button type="submit"
-                                id="submitBtn"
-                                class="w-full inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
-
-                            <!-- Loading Spinner (Hidden by default) -->
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" id="loadingSpinner" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-
-                            <!-- Default Content -->
-                            <span id="defaultContent" class="flex items-center">
-                                <i class="fas fa-wand-magic-sparkles mr-2"></i>
-                                Generate Iklan Sekarang
-                                <i class="fas fa-arrow-right ml-2"></i>
-                            </span>
-
-                            <!-- Loading Content (Hidden by default) -->
-                            <span id="loadingContent" class="hidden">
-                                Sedang Membuat Iklan...
-                            </span>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Footer Info -->
-                <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <div class="flex items-start space-x-3">
-                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                        <div class="text-sm text-blue-700">
-                            <p class="font-medium mb-1">Tips untuk hasil terbaik:</p>
-                            <ul class="text-xs space-y-1 text-blue-600">
-                                <li>• Deskripsikan produk/layanan secara spesifik</li>
-                                <li>• Cantumkan penawaran menarik jika ada</li>
-                                <li>• Pilih platform sesuai target audiens Anda</li>
-                            </ul>
+                    <div class="bg-gray-50 px-8 py-6 md:px-12">
+                        <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                <span class="text-sm">Iklan akan disesuaikan dengan analisa bisnis Anda</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                                <a href="{{ route('front.ads.history') }}"
+                                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300 text-center">
+                                    <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
+                                </a>
+                                <button type="submit" id="generate-btn"
+                                        class="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">
+                                    <i class="fas fa-magic mr-2"></i>Generate Iklan
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Loading Overlay (Hidden by default) -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen">
-            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
-                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Sedang Membuat Iklan</h3>
-                <p class="text-gray-600 text-sm">AI sedang menganalisis data Anda...</p>
-                <div class="mt-4">
-                    <div class="bg-gray-200 rounded-full h-2">
-                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full animate-pulse" style="width: 70%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.getElementById('adForm').addEventListener('submit', function(e) {
-            // Get elements
-            const submitBtn = document.getElementById('submitBtn');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const defaultContent = document.getElementById('defaultContent');
-            const loadingContent = document.getElementById('loadingContent');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-
-            // Disable button
-            submitBtn.disabled = true;
-
-            // Show loading spinner and change text
-            loadingSpinner.classList.remove('hidden');
-            defaultContent.classList.add('hidden');
-            loadingContent.classList.remove('hidden');
-
-            // Show overlay
-            loadingOverlay.classList.remove('hidden');
-
-            // Optional: Add body scroll lock
-            document.body.style.overflow = 'hidden';
-
-            // If form validation fails, reset button state
-            setTimeout(() => {
-                if (!this.checkValidity()) {
-                    resetButton();
-                }
-            }, 100);
-        });
-
-        function resetButton() {
-            const submitBtn = document.getElementById('submitBtn');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const defaultContent = document.getElementById('defaultContent');
-            const loadingContent = document.getElementById('loadingContent');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-
-            // Re-enable button
-            submitBtn.disabled = false;
-
-            // Hide loading, show default
-            loadingSpinner.classList.add('hidden');
-            defaultContent.classList.remove('hidden');
-            loadingContent.classList.add('hidden');
-
-            // Hide overlay
-            loadingOverlay.classList.add('hidden');
-
-            // Restore body scroll
-            document.body.style.overflow = '';
+    <style>
+        .platform-option input[type="radio"]:checked + .platform-card {
+            border-color: #3b82f6;
+            background-color: #f0f9ff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        // Reset on page load (in case of back button)
-        window.addEventListener('load', function() {
-            resetButton();
-        });
+        .platform-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
 
-        // Handle form validation errors
-        const form = document.getElementById('adForm');
-        const inputs = form.querySelectorAll('input[required], select[required]');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('ads-form');
+            const generateBtn = document.getElementById('generate-btn');
 
-        inputs.forEach(input => {
-            input.addEventListener('invalid', function() {
-                resetButton();
+            // Form submission with loading state
+            form.addEventListener('submit', function(e) {
+                // Update button state
+                generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+                generateBtn.disabled = true;
+                generateBtn.classList.add('opacity-75');
+
+                // Add loading class to form
+                form.classList.add('loading');
             });
         });
     </script>

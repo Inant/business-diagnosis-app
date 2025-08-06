@@ -5,48 +5,71 @@
         <div class="max-w-7xl mx-auto px-4">
             <!-- Header -->
             <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
+                <div
+                    class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
                     <i class="fas fa-calendar-check text-white text-2xl"></i>
                 </div>
                 <h1 class="text-4xl font-bold text-gray-800 mb-2">Kalender Konten Bisnis Anda</h1>
-                <p class="text-gray-600 max-w-2xl mx-auto">Strategi konten yang dipersonalisasi berdasarkan analisa bisnis Anda. Siap untuk meningkatkan engagement!</p>
+                <p class="text-gray-600 max-w-2xl mx-auto">Strategi konten yang dipersonalisasi berdasarkan analisa
+                    bisnis Anda. Siap untuk meningkatkan engagement!</p>
             </div>
 
-            @php
-                $pilarCounts = $contentIdeas->groupBy('pilar_konten')->map->count();
-                $formatCounts = $contentIdeas->groupBy('rekomendasi_format')->map->count();
-            @endphp
-
-                <!-- Statistics Overview -->
-            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-6">
-                    <i class="fas fa-chart-bar mr-2 text-purple-500"></i>
-                    Ringkasan Kalender Konten
-                </h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
-                        <div class="text-2xl font-bold text-purple-600">{{ $contentIdeas->count() }}</div>
-                        <div class="text-sm text-gray-600">Total Konten</div>
-                    </div>
-                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
-                        <div class="text-2xl font-bold text-blue-600">{{ $pilarCounts['Edukasi'] ?? 0 }}</div>
-                        <div class="text-sm text-gray-600">Konten Edukasi</div>
-                    </div>
-                    <div class="text-center p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl">
-                        <div class="text-2xl font-bold text-pink-600">{{ $pilarCounts['Inspirasi'] ?? 0 }}</div>
-                        <div class="text-sm text-gray-600">Konten Inspirasi</div>
-                    </div>
-                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
-                        <div class="text-2xl font-bold text-green-600">{{ $pilarCounts['Interaksi'] ?? 0 }}</div>
-                        <div class="text-sm text-gray-600">Konten Interaksi</div>
+            <!-- Content Plan Info Card -->
+            <div class="mb-6 sm:mb-8">
+                <div class="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+                    <div
+                        class="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+                        <div>
+                            @if(isset($contentPlan) && is_object($contentPlan))
+                                <h3 class="text-lg sm:text-xl font-semibold mb-1">Plan #{{ $contentPlan->id }}</h3>
+                                <p class="text-sm sm:text-base text-pink-100 mb-2">
+                                    Dibuat pada {{ $contentPlan->created_at->format('d F Y') }}
+                                    - {{ $contentPlan->created_at->format('H:i') }} WIB
+                                </p>
+                                @if($contentPlan->tujuan_pembuatan_konten)
+                                    <div class="bg-white bg-opacity-20 rounded-lg p-3 mt-3">
+                                        <p class="text-xs sm:text-sm font-medium">
+                                            Tujuan: {{ $contentPlan->tujuan_pembuatan_konten }}</p>
+                                    </div>
+                                @endif
+                            @else
+                                <h3 class="text-lg sm:text-xl font-semibold mb-1">Kalender Konten</h3>
+                                <p class="text-sm sm:text-base text-pink-100 mb-2">
+                                    Dibuat pada {{ $session->created_at->format('d F Y') }}
+                                </p>
+                            @endif
+                        </div>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
+                            @if(isset($contentPlan) && is_object($contentPlan))
+                                <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                                    <div
+                                        class="text-lg sm:text-xl font-bold">{{ $contentPlan->contentIdeas->count() }}</div>
+                                    <div class="text-xs sm:text-sm text-pink-100">Konten</div>
+                                </div>
+                                <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                                    <div class="text-lg sm:text-xl font-bold">{{ $contentPlan->days }}</div>
+                                    <div class="text-xs sm:text-sm text-pink-100">Hari</div>
+                                </div>
+{{--                                <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">--}}
+{{--                                    <div class="text-sm sm:text-base font-bold">{{ $contentPlan->formatted_cost }}</div>--}}
+{{--                                    <div class="text-xs sm:text-sm text-pink-100">Biaya</div>--}}
+{{--                                </div>--}}
+                            @else
+                                <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                                    <div class="text-lg sm:text-xl font-bold">{{ $contentIdeas->count() }}</div>
+                                    <div class="text-xs sm:text-sm text-pink-100">Konten</div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Content Calendar Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-                @foreach($contentIdeas as $item)
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 h-full flex flex-col">
+                @foreach($contentPlan->contentIdeas as $item)
+                    <div
+                        class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 h-full flex flex-col">
                         <!-- Card Header -->
                         <div class="relative p-6 pb-4
                         @if($item->pilar_konten === 'Edukasi') bg-gradient-to-r from-blue-500 to-indigo-600
@@ -55,7 +78,8 @@
 
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center text-white">
-                                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                                    <div
+                                        class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
                                         <span class="font-bold text-lg">{{ $item->hari_ke }}</span>
                                     </div>
                                     <div>
@@ -112,17 +136,36 @@
                                 </h4>
                                 <ul class="space-y-2">
                                     @php
-                                        $poinUtama = json_decode($item->script_poin_utama, true) ?? [];
+                                        // Pastikan $item->script_poin_utama adalah array
+                                        $poinUtama = is_array($item->script_poin_utama)
+                                            ? $item->script_poin_utama
+                                            : (is_string($item->script_poin_utama)
+                                                ? json_decode($item->script_poin_utama, true)
+                                                : []);
                                     @endphp
-                                    @foreach($poinUtama as $poin)
+                                    @if(is_array($poinUtama) && count($poinUtama) > 0)
+                                        @foreach($poinUtama as $poin)
+                                            <li class="flex items-start text-sm text-gray-600">
+                                                <div class="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0
+                                                    @if($item->pilar_konten === 'Edukasi') bg-blue-400
+                                                    @elseif($item->pilar_konten === 'Inspirasi') bg-pink-400
+                                                    @else bg-green-400 @endif">
+
+                                                </div>
+                                                <span>{{ $poin }}</span>
+                                            </li>
+                                        @endforeach
+                                    @else
                                         <li class="flex items-start text-sm text-gray-600">
                                             <div class="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0
-                                            @if($item->pilar_konten === 'Edukasi') bg-blue-400
-                                            @elseif($item->pilar_konten === 'Inspirasi') bg-pink-400
-                                            @else bg-green-400 @endif"></div>
-                                            <span>{{ $poin }}</span>
+                @if($item->pilar_konten === 'Edukasi') bg-blue-400
+                @elseif($item->pilar_konten === 'Inspirasi') bg-pink-400
+                @else bg-green-400 @endif">
+
+                                            </div>
+                                            <span>{{ is_string($item->script_poin_utama) ? $item->script_poin_utama : 'Tidak ada poin utama' }}</span>
                                         </li>
-                                    @endforeach
+                                    @endif
                                 </ul>
                             </div>
 
@@ -150,12 +193,15 @@
                                     <!-- CTA Label with Icon -->
                                     <div class="flex items-center justify-between mb-3">
                                         <div class="flex items-center text-white">
-                                            <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-2">
+                                            <div
+                                                class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-2">
                                                 <i class="fas fa-bullseye text-sm"></i>
                                             </div>
-                                            <span class="text-xs font-bold uppercase tracking-widest">Call to Action</span>
+                                            <span
+                                                class="text-xs font-bold uppercase tracking-widest">Call to Action</span>
                                         </div>
-                                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center animate-pulse">
+                                        <div
+                                            class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center animate-pulse">
                                             <i class="fas fa-exclamation text-white text-xs"></i>
                                         </div>
                                     </div>
@@ -193,21 +239,23 @@
                         <p class="text-gray-600 text-sm">Mulai implementasikan strategi konten Anda hari ini</p>
                     </div>
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-{{--                        <button onclick="downloadCalendar()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">--}}
-{{--                            <i class="fas fa-download mr-2"></i>Download PDF--}}
-{{--                        </button>--}}
-                        <button onclick="shareCalendar()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300">
+                        {{--                        <button onclick="downloadCalendar()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300">--}}
+                        {{--                            <i class="fas fa-download mr-2"></i>Download PDF--}}
+                        {{--                        </button>--}}
+                        <button onclick="shareCalendar()"
+                                class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300">
                             <i class="fas fa-share-alt mr-2"></i>Bagikan
                         </button>
 
-                        <a href="{{ route('front.ads.form', $session->id) }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mt-4">
-                            <i class="fas fa-magic mr-2"></i>Generate Iklan
-                        </a>
+{{--                        <a href="{{ route('front.ads.form') }}"--}}
+{{--                           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mt-4">--}}
+{{--                            <i class="fas fa-magic mr-2"></i>Generate Iklan--}}
+{{--                        </a>--}}
 
                         {{--                        <a href="{{ route('front.content.form', $session->id) }}"--}}
-{{--                           class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center">--}}
-{{--                            <i class="fas fa-sync-alt mr-2"></i>Generate Ulang--}}
-{{--                        </a>--}}
+                        {{--                           class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 text-center">--}}
+                        {{--                            <i class="fas fa-sync-alt mr-2"></i>Generate Ulang--}}
+                        {{--                        </a>--}}
                     </div>
                 </div>
             </div>
@@ -365,10 +413,21 @@
 
         /* Print styles */
         @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
-            .bg-gradient-to-br { background: white !important; }
-            .shadow-xl { box-shadow: none !important; }
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            .bg-gradient-to-br {
+                background: white !important;
+            }
+
+            .shadow-xl {
+                box-shadow: none !important;
+            }
         }
     </style>
 
@@ -403,7 +462,7 @@
         }
 
         // Copy CTA functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Add fade-in animation to cards
             const cards = document.querySelectorAll('.transform');
             const observer = new IntersectionObserver((entries) => {
@@ -425,7 +484,7 @@
             // Add copy CTA functionality
             document.querySelectorAll('button').forEach(button => {
                 if (button.textContent.includes('Copy CTA')) {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function () {
                         const card = this.closest('.bg-white');
                         const ctaText = card.querySelector('p.font-bold').textContent;
 

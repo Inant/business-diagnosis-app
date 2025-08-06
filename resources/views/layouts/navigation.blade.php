@@ -11,9 +11,13 @@
                             <a href="{{ route('backoffice.sessions') }}" class="hover:text-blue-300">Data Jawaban User</a>
                             <a href="{{ route('backoffice.usage_stats') }}" class="hover:text-blue-300">API Statistic</a>
                         @else
-                            <a href="{{ route('front.form') }}" class="hover:text-blue-300">Isi Form Analisa</a>
+                            <a href="{{ route('front.dashboard') }}" class="hover:text-blue-300">Beranda</a>
+{{--                            <a href="{{ route('front.form') }}" class="hover:text-blue-300">Isi Form Analisa</a>--}}
 {{--                            <a href="{{ route('front.form', ['category' => 2]) }}" class="hover:text-blue-300">Isi Form Analisa 2</a>--}}
-                            <a href="{{ route('front.history') }}" class="hover:text-blue-300">Riwayat Analisa Saya</a>
+{{--                            <a href="{{ route('front.history') }}" class="hover:text-blue-300">Riwayat Analisa Saya</a>--}}
+
+                            <a href="{{ route('front.content.history') }}" class="hover:text-blue-300">Content Generator</a>
+                            <a href="{{ route('front.ads.history') }}" class="hover:text-blue-300">Ads Generator</a>
 
                             <!-- MENU TAMBAHAN (Frontoffice Only) - Dropdown -->
                             <div x-data="{ openGen: false }" class="relative">
@@ -74,9 +78,12 @@
                     <a href="{{ route('backoffice.sessions') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Data Jawaban User</a>
                     <a href="{{ route('backoffice.usage_stats') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">API Statistic</a>
                 @else
-                    <a href="{{ route('front.form') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Analisa</a>
+                    <a href="{{ route('front.dashboard') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Beranda</a>
+{{--                    <a href="{{ route('front.form') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Analisa</a>--}}
 {{--                    <a href="{{ route('front.form', ['category' => 2]) }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Isi Form Pertanyaan 2</a>--}}
-                    <a href="{{ route('front.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Riwayat Analisa Saya</a>
+{{--                    <a href="{{ route('front.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Riwayat Analisa Saya</a>--}}
+                    <a href="{{ route('front.content.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Content Generator</a>
+                    <a href="{{ route('front.ads.history') }}" class="block py-2 px-2 rounded hover:bg-gray-800 hover:text-blue-300">Ads Generator</a>
 
                     <!-- MENU TAMBAHAN (Frontoffice Only - MOBILE) -->
                     <div x-data="{ openGenMobile: false }" class="mb-1">

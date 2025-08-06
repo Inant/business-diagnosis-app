@@ -54,7 +54,16 @@ class AuthenticatedSessionController extends Controller
 
         if (Auth::attempt(['phone_number' => $request->phone_number, 'password' => $request->password], $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+
+            // Cek role user setelah login berhasil
+            $authenticatedUser = Auth::user();
+
+            if ($authenticatedUser->role === 'user') {
+                return redirect()->intended(route('front.dashboard'));
+            } else {
+                // Untuk admin atau role lainnya, redirect ke dashboard default
+                return redirect()->intended(route('dashboard'));
+            }
         }
 
         return back()->withErrors(['phone_number' => 'Login gagal'])->withInput($request->only('phone_number'));

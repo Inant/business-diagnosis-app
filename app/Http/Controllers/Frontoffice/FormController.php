@@ -10,6 +10,7 @@ use App\Models\AiResponse;
 use Illuminate\Support\Str;
 use App\Models\Question;
 use App\Models\ContentIdea;
+use App\Models\ContentPlan;
 use App\Models\ShootingScript;
 use App\Models\AdsResult;
 use Illuminate\Support\Facades\Http;
@@ -23,6 +24,65 @@ class FormController extends Controller
     {
         $this->geminiService = $geminiService;
     }
+
+    public function dashboard()
+    {
+        $user = auth()->user();
+
+        // Ambil sesi utama user (analisa bisnis)
+        $mainSession = UserSession::where('user_id', $user->id)
+            ->with(['aiResponses' => function($query) {
+                $query->whereIn('step', ['diagnosis', 'swot']);
+            }])
+            ->first();
+
+        $data = [
+            'mainSession' => $mainSession,
+            'contentPlans' => collect(),
+            'stats' => [
+                'total_content_plans' => 0,
+                'total_content_ideas' => 0,
+                'this_month_plans' => 0,
+            ]
+        ];
+
+        if ($mainSession) {
+            // Ambil content plans terbaru
+            $contentPlans = ContentPlan::where('user_id', $user->id)
+                ->with(['contentIdeas'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+
+            // Hitung statistik
+            $allContentPlans = ContentPlan::where('user_id', $user->id)->get();
+            $totalContentIdeas = ContentIdea::whereIn('content_plan_id', $allContentPlans->pluck('content_plan_id'))->count();
+            $thisMonthPlans = ContentPlan::where('user_id', $user->id)
+                ->where('created_at', '>=', now()->subDays(30))
+                ->count();
+
+            // Extract profil DNA bisnis
+            $profilDna = null;
+            $diagnosis = $mainSession->aiResponses->where('step', 'diagnosis')->first();
+            if ($diagnosis && $diagnosis->profil_dna_bisnis) {
+                $profilDna = json_decode($diagnosis->profil_dna_bisnis, true);
+            }
+
+            $data = [
+                'mainSession' => $mainSession,
+                'contentPlans' => $contentPlans,
+                'profilDna' => $profilDna,
+                'stats' => [
+                    'total_content_plans' => $allContentPlans->count(),
+                    'total_content_ideas' => $totalContentIdeas,
+                    'this_month_plans' => $thisMonthPlans,
+                ]
+            ];
+        }
+
+        return view('frontoffice.dashboard', $data);
+    }
+
     public function showForm(Request $request)
     {
         $user = auth()->user();
@@ -196,7 +256,7 @@ EOP;
     protected function sendToGemini($prompt)
     {
         $apiKey = env('GEMINI_API_KEY');
-            $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
 
         $body = [
             "contents" => [
@@ -313,101 +373,165 @@ yang akan mengajari AI sebagai sparing partner dalam membuat konten, iklan, copy
 EOP;
     }
 
-    public function showContentPlanForm($session_id)
+    public function contentHistory()
     {
-        $session = UserSession::findOrFail($session_id);
-        $contentPlan = AiResponse::where('user_session_id', $session_id)
-            ->where('step', 'content_plan')->first();
+        $user = auth()->user();
 
-        // Jika sudah pernah generate, tampilkan hasil
-        if ($contentPlan && $contentPlan->ai_response) {
-            // Ambil data dari ContentIdea table
-            $contentIdeas = ContentIdea::where('user_session_id', $session_id)->orderBy('hari_ke')->get();
-            return view('frontoffice.content_plan_result', compact('session', 'contentIdeas'));
+        // Ambil sesi utama user (satu-satunya sesi)
+        $mainSession = UserSession::where('user_id', $user->id)->first();
+
+        if (!$mainSession) {
+            // Jika belum ada sesi, redirect ke form analisa awal
+            return redirect()->route('front.form')->with('info', 'Silakan lengkapi analisa bisnis terlebih dahulu');
+        }
+
+        // Ambil semua content plans dari user ini
+        $contentPlans = ContentPlan::where('user_id', $user->id)
+            ->with('contentIdeas')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('frontoffice.content_history', compact('mainSession', 'contentPlans'));
+    }
+
+    public function showContentPlanForm($session_id = null)
+    {
+        $user = auth()->user();
+
+        // Jika ada session_id, ini adalah route lama
+        if ($session_id) {
+            $session = UserSession::findOrFail($session_id);
+
+            // Cek apakah ini request untuk melihat hasil yang sudah ada
+            if (request()->has('show_result')) {
+                $contentPlan = AiResponse::where('user_session_id', $session_id)
+                    ->where('step', 'content_plan')
+                    ->latest()
+                    ->first();
+
+                if ($contentPlan) {
+                    $contentIdeas = ContentIdea::where('user_session_id', $session_id)
+                        ->orderBy('hari_ke')
+                        ->get();
+
+                    return view('frontoffice.content_plan_result', compact('session', 'contentIdeas', 'contentPlan'));
+                }
+            }
+
+            // Cek apakah sudah ada diagnosis dan SWOT
+            $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
+            $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
+
+            if (!$diagnosis) {
+                return redirect()->route('front.form')->with('error', 'Silakan lengkapi analisa bisnis terlebih dahulu');
+            }
+
+            if (!$swot) {
+                return redirect()->route('front.swot.form', $session_id)->with('error', 'Silakan lengkapi analisa SWOT terlebih dahulu');
+            }
+
+            return view('frontoffice.content_plan_form', compact('session'));
+        }
+
+        // Route baru - ambil sesi utama user
+        $session = UserSession::where('user_id', $user->id)->first();
+        if (!$session) {
+            return redirect()->route('front.form')->with('info', 'Silakan lengkapi analisa bisnis terlebih dahulu');
+        }
+
+        // Cek apakah sudah ada diagnosis dan SWOT
+        $diagnosis = AiResponse::where('user_session_id', $session->id)->where('step', 'diagnosis')->first();
+        $swot = AiResponse::where('user_session_id', $session->id)->where('step', 'swot')->first();
+
+        if (!$diagnosis) {
+            return redirect()->route('front.form')->with('error', 'Silakan lengkapi analisa bisnis terlebih dahulu');
+        }
+
+        if (!$swot) {
+            return redirect()->route('front.swot.form', $session->id)->with('error', 'Silakan lengkapi analisa SWOT terlebih dahulu');
         }
 
         return view('frontoffice.content_plan_form', compact('session'));
     }
 
-    public function generateContentPlan(Request $request, $session_id)
+    public function generateContentPlan(Request $request)
     {
-        $session = UserSession::findOrFail($session_id);
         $user = auth()->user();
+
+        // Ambil sesi utama user
+        $session = UserSession::where('user_id', $user->id)->first();
+        if (!$session) {
+            return redirect()->route('front.form')->with('info', 'Silakan lengkapi analisa bisnis terlebih dahulu');
+        }
+
         $days = $request->input('days', 7);
         $tujuan_pembuatan_konten = $request->input('tujuan_pembuatan_konten', null);
 
-        // Cek apakah sudah ada content ideas
-        $existingContentIdeas = ContentIdea::where('user_session_id', $session_id)->get();
+        // Generate unique identifier untuk content plan ini
+        $contentPlanId = 'cp_' . time() . '_' . $session->id;
 
-        if ($existingContentIdeas->isEmpty()) {
-            // Generate baru
-            $answers = UserAnswer::where('user_session_id', $session_id)->pluck('answer', 'question_id')->toArray();
-            $questions = Question::orderBy('order')->get();
+        // Ambil data yang diperlukan
+        $answers = UserAnswer::where('user_session_id', $session->id)->pluck('answer', 'question_id')->toArray();
+        $questions = Question::orderBy('order')->get();
+        $diagnosis = AiResponse::where('user_session_id', $session->id)->where('step', 'diagnosis')->first();
+        $swot = AiResponse::where('user_session_id', $session->id)->where('step', 'swot')->first();
 
-            $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
-            $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
+        $prompt = $this->generateContentPlanPrompt(
+            $questions, $answers,
+            $diagnosis?->ai_response,
+            $swot?->ai_response,
+            $days,
+            $tujuan_pembuatan_konten
+        );
 
-            $prompt = $this->generateContentPlanPrompt(
-                $questions, $answers,
-                $diagnosis?->ai_response,
-                $swot?->ai_response,
-                $days,
-                $tujuan_pembuatan_konten
-            );
+        // Kirim ke Gemini
+        $result = $this->geminiService->generateContent(
+            $prompt,
+            $user->id,
+            $session->id,
+            'content_plan'
+        );
 
-            // Kirim ke Gemini dengan tracking
-            $result = $this->geminiService->generateContent(
-                $prompt,
-                $user->id,
-                $session_id,
-                'content_plan'
-            );
+        $jsonString = $this->extractJsonFromResponse($result['content']);
+        $kontenArray = json_decode($jsonString, true);
 
-            $jsonString = $this->extractJsonFromResponse($result['content']);
-            $kontenArray = json_decode($jsonString, true);
-
-            if (!is_array($kontenArray)) {
-                throw new \Exception('Gagal parsing JSON dari Gemini.');
-            }
-
-            // Simpan ke table content_ideas
-            foreach ($kontenArray as $item) {
-                ContentIdea::updateOrCreate(
-                    [
-                        'user_session_id' => $session_id,
-                        'hari_ke' => $item['Hari_ke'],
-                    ],
-                    [
-                        'judul_konten' => $item['Judul_Konten'],
-                        'pilar_konten' => $item['Pilar_Konten'],
-                        'hook' => $item['Hook'],
-                        'script_poin_utama' => is_array($item['Script_Poin_Utama'])
-                            ? json_encode($item['Script_Poin_Utama'])
-                            : $item['Script_Poin_Utama'],
-                        'call_to_action' => $item['Call_to_Action_(CTA)'],
-                        'rekomendasi_format' => $item['Rekomendasi_Format'],
-                    ]
-                );
-            }
-
-            // Simpan di ai_responses
-            AiResponse::create([
-                'user_session_id' => $session_id,
-                'step' => 'content_plan',
-                'prompt' => $prompt,
-                'ai_response' => $jsonString,
-                'tujuan_pembuatan_konten' => $tujuan_pembuatan_konten,
-                'tokens_used' => $result['usage']['total_tokens'],
-                'cost_idr' => $result['usage']['total_cost_idr'],
-                'response_time_ms' => $result['usage']['response_time_ms']
-            ]);
-
-            $contentIdeas = ContentIdea::where('user_session_id', $session_id)->orderBy('hari_ke')->get();
-        } else {
-            $contentIdeas = $existingContentIdeas->sortBy('hari_ke');
+        if (!is_array($kontenArray)) {
+            throw new \Exception('Gagal parsing JSON dari Gemini.');
         }
 
-        return view('frontoffice.content_plan_result', compact('session', 'contentIdeas'));
+        // Simpan ke table content_plans
+        $contentPlan = ContentPlan::create([
+            'content_plan_id' => $contentPlanId,
+            'user_session_id' => $session->id,
+            'user_id' => $user->id,
+            'days' => $days,
+            'tujuan_pembuatan_konten' => $tujuan_pembuatan_konten,
+            'prompt' => $prompt,
+            'ai_response' => $jsonString,
+            'tokens_used' => $result['usage']['total_tokens'],
+            'cost_idr' => $result['usage']['total_cost_idr'],
+            'response_time_ms' => $result['usage']['response_time_ms']
+        ]);
+
+        // Simpan ke table content_ideas
+        foreach ($kontenArray as $item) {
+            ContentIdea::create([
+                'user_session_id' => $session->id,
+                'content_plan_id' => $contentPlanId,
+                'hari_ke' => $item['Hari_ke'],
+                'judul_konten' => $item['Judul_Konten'],
+                'pilar_konten' => $item['Pilar_Konten'],
+                'hook' => $item['Hook'],
+                'script_poin_utama' => is_array($item['Script_Poin_Utama'])
+                    ? $item['Script_Poin_Utama']
+                    : json_decode($item['Script_Poin_Utama'], true),
+                'call_to_action' => $item['Call_to_Action_(CTA)'],
+                'rekomendasi_format' => $item['Rekomendasi_Format'],
+            ]);
+        }
+
+        return redirect()->route('front.content.detail', $contentPlanId)
+            ->with('success', 'Konten berhasil di-generate!');
     }
 
     protected function generateContentPlanPrompt($questions, $answers, $diagnosis, $swot, $days, $tujuan_pembuatan_konten)
@@ -427,69 +551,82 @@ EOP;
         $durasi = $days;
 
         return <<<EOP
-# PERAN
-Kamu adalah seorang Social Media Content Strategist dan Creative Copywriter yang sangat terstruktur. Kamu ahli dalam mengubah strategi menjadi ide konten harian yang lengkap dengan script, hook, dan CTA.
+    # PERAN
+    Kamu adalah seorang Social Media Content Strategist dan Creative Copywriter yang sangat terstruktur. Kamu ahli dalam mengubah strategi menjadi ide konten harian yang lengkap dengan script, hook, dan CTA.
 
-# KONTEKS
-Kamu akan membuat rencana konten untuk sebuah bisnis. Berikut adalah semua data strategis yang kamu butuhkan:
+    # KONTEKS
+    Kamu akan membuat rencana konten untuk sebuah bisnis. Berikut adalah semua data strategis yang kamu butuhkan:
 
-**BAGIAN A: PROFIL BISNIS LENGKAP**
-$jawabanStr
+    **BAGIAN A: PROFIL BISNIS LENGKAP**
+    $jawabanStr
 
-**BAGIAN B: ASET MARKETING YANG TELAH DISIMPAN**
-* **Masalah Inti Bisnis:** $diagnosisStr
-* **Analisis SWOT:** $swotStr
+    **BAGIAN B: ASET MARKETING YANG TELAH DISIMPAN**
+    * **Masalah Inti Bisnis:** $diagnosisStr
+    * **Analisis SWOT:** $swotStr
 
-**BAGIAN C: PERMINTAAN KONTEN DINAMIS**
-* **Durasi Rencana Konten:** Buatkan rencana untuk **$durasi** hari
+    **BAGIAN C: PERMINTAAN KONTEN DINAMIS**
+    * **Durasi Rencana Konten:** Buatkan rencana untuk **$durasi** hari
 
-# TUGAS
-1.  Buatkan **Rencana Kalender Konten** untuk durasi yang diminta pada **Bagian C**.
-2.  Setiap hari harus memiliki satu ide konten yang unik, relevan dengan Pilar Konten (Edukasi, Interaksi, Inspirasi), dan berbicara langsung kepada Persona Pembeli.
-3.  **PENTING:** Untuk setiap ide konten, pecah informasinya ke dalam **struktur field** berikut:
-    * `Hari_ke`: (Nomor urut hari)
-    * `Pilar_Konten`: (Pilih salah satu: Edukasi, Interaksi, atau Inspirasi)
-    * `Judul_Konten`: (Judul yang menarik dan ringkas)
-    * `Hook`: (Satu kalimat pembuka yang sangat kuat untuk 1-3 detik pertama video/post)
-    * `Script_Poin_Utama`: (Isi konten dalam 3-4 poin ringkas)
-    * `Call_to_Action_(CTA)`: (Ajakan bertindak yang spesifik, misal: "Komen di bawah", "Klik link di bio", "Share ke temanmu")
-    * `Rekomendasi_Format`: (Saran format, misal: Video Reels, Carousel Instagram, TikTok Story, Website Blog Post)
-Prioritaskan konten dari pilar Edukasi dan Inspirasi. Buat penyebutan produk secara halus dan tidak langsung.
+    # TUGAS
+    1.  Buatkan **Rencana Kalender Konten** untuk durasi yang diminta pada **Bagian C**.
+    2.  Setiap hari harus memiliki satu ide konten yang unik, relevan dengan Pilar Konten (Edukasi, Interaksi, Inspirasi), dan berbicara langsung kepada Persona Pembeli.
+    3.  **PENTING:** Untuk setiap ide konten, pecah informasinya ke dalam **struktur field** berikut:
+        * `Hari_ke`: (Nomor urut hari)
+        * `Pilar_Konten`: (Pilih salah satu: Edukasi, Interaksi, atau Inspirasi)
+        * `Judul_Konten`: (Judul yang menarik dan ringkas)
+        * `Hook`: (Satu kalimat pembuka yang sangat kuat untuk 1-3 detik pertama video/post)
+        * `Script_Poin_Utama`: (Isi konten dalam 3-4 poin ringkas)
+        * `Call_to_Action_(CTA)`: (Ajakan bertindak yang spesifik, misal: "Komen di bawah", "Klik link di bio", "Share ke temanmu")
+        * `Rekomendasi_Format`: (Saran format, misal: Video Reels, Carousel Instagram, TikTok Story, Website Blog Post)
+    Prioritaskan konten dari pilar Edukasi dan Inspirasi. Buat penyebutan produk secara halus dan tidak langsung.
 
-# FORMAT & GAYA
-* **WAJIB:** Sajikan seluruh output dalam format **JSON (JavaScript Object Notation)** yang benar-benar valid. Buat sebuah array (daftar) di mana setiap objek di dalamnya adalah satu hari dari rencana konten, dengan key yang sesuai dengan nama field yang diminta di atas (`Hari_ke`, `Pilar_Konten`, dll).
-* **AWALI** output langsung dengan tanda kurung siku `[` dan **AKHIRI** dengan kurung siku penutup `]`, tanpa teks apa pun di luar array.
-* Setiap field string **wajib** menggunakan tanda kutip dua `"` (double quotes).
-* **JANGAN** menambahkan teks, penjelasan, catatan, komentar, markdown (seperti ```json), atau karakter lain di luar array JSON.
-* **JANGAN** memakai trailing comma (koma di akhir array/objek).
-* Jika ada karakter khusus di dalam string (misal tanda kutip di dalam value), gunakan escape karakter sesuai format JSON (`\"`).
-* Format JSON ini akan memastikan aplikasi Anda dapat dengan mudah mem-parsing data dan menampilkannya di field yang sudah Anda siapkan.
+    # FORMAT & GAYA
+    * **WAJIB:** Sajikan seluruh output dalam format **JSON (JavaScript Object Notation)** yang benar-benar valid. Buat sebuah array (daftar) di mana setiap objek di dalamnya adalah satu hari dari rencana konten, dengan key yang sesuai dengan nama field yang diminta di atas (`Hari_ke`, `Pilar_Konten`, dll).
+    * **AWALI** output langsung dengan tanda kurung siku `[` dan **AKHIRI** dengan kurung siku penutup `]`, tanpa teks apa pun di luar array.
+    * Setiap field string **wajib** menggunakan tanda kutip dua `"` (double quotes).
+    * **JANGAN** menambahkan teks, penjelasan, catatan, komentar, markdown (seperti ```json), atau karakter lain di luar array JSON.
+    * **JANGAN** memakai trailing comma (koma di akhir array/objek).
+    * Jika ada karakter khusus di dalam string (misal tanda kutip di dalam value), gunakan escape karakter sesuai format JSON (`\"`).
+    * Format JSON ini akan memastikan aplikasi Anda dapat dengan mudah mem-parsing data dan menampilkannya di field yang sudah Anda siapkan.
 
-* **Contoh format output JSON untuk 2 hari:**
-```json
-[
-  {
-    "Hari_ke": 1,
-    "Pilar_Konten": "",
-    "Judul_Konten": "",
-    "Hook": "",
-    "Script_Poin_Utama": [],
-    "Call_to_Action_(CTA)": "",
-    "Rekomendasi_Format": ""
-  },
-  {
-    "Hari_ke": 2,
-    "Pilar_Konten": "",
-    "Judul_Konten": "",
-    "Hook": "",
-    "Script_Poin_Utama": [],
-    "Call_to_Action_(CTA)": "",
-    "Rekomendasi_Format": ""
-  }
-]
+    * **Contoh format output JSON untuk 2 hari:**
+    ```json
+    [
+      {
+        "Hari_ke": 1,
+        "Pilar_Konten": "",
+        "Judul_Konten": "",
+        "Hook": "",
+        "Script_Poin_Utama": [],
+        "Call_to_Action_(CTA)": "",
+        "Rekomendasi_Format": ""
+      },
+      {
+        "Hari_ke": 2,
+        "Pilar_Konten": "",
+        "Judul_Konten": "",
+        "Hook": "",
+        "Script_Poin_Utama": [],
+        "Call_to_Action_(CTA)": "",
+        "Rekomendasi_Format": ""
+      }
+    ]
 EOP;
     }
 
+    public function showContentDetail($contentPlanId)
+    {
+        $user = auth()->user();
+
+        $contentPlan = ContentPlan::where('content_plan_id', $contentPlanId)
+            ->where('user_id', $user->id)
+            ->with(['userSession', 'contentIdeas' => function($query) {
+                $query->orderBy('hari_ke');
+            }])
+            ->firstOrFail();
+
+        return view('frontoffice.content_plan_result', compact('contentPlan'));
+    }
     protected function extractJsonFromResponse($responseText)
     {
         // Hilangkan ```json di awal dan ``` di akhir
@@ -597,10 +734,32 @@ EOP;
 
     protected function generateShootingScriptPrompt($contentIdea, $diagnosis, $swot, $gayaPembawaan, $targetDurasi, $penyebutanAudiens)
     {
-        $poinUtama = json_decode($contentIdea->script_poin_utama, true) ?? [];
-        $poinUtamaStr = implode("\n", array_map(function($poin, $index) {
-            return ($index + 1) . ". " . $poin;
-        }, $poinUtama, array_keys($poinUtama)));
+        // Perbaiki handling script_poin_utama
+        $poinUtama = [];
+
+        if (is_array($contentIdea->script_poin_utama)) {
+            // Jika sudah array (dari cast model)
+            $poinUtama = $contentIdea->script_poin_utama;
+        } elseif (is_string($contentIdea->script_poin_utama)) {
+            // Jika masih string JSON
+            $decoded = json_decode($contentIdea->script_poin_utama, true);
+            $poinUtama = is_array($decoded) ? $decoded : [$contentIdea->script_poin_utama];
+        } else {
+            // Fallback jika null atau tipe lain
+            $poinUtama = [];
+        }
+
+        // Generate string untuk prompt
+        $poinUtamaStr = '';
+        if (count($poinUtama) > 0) {
+            $poinUtamaStr = implode("\n", array_map(function($poin, $index) {
+                return ($index + 1) . ". " . $poin;
+            }, $poinUtama, array_keys($poinUtama)));
+        }
+
+        // Rest of your method code...
+        $diagnosis = $diagnosis ?: '-';
+        $swot = $swot ?: '-';
 
         return <<<EOP
 # PERAN DAN TUJUAN

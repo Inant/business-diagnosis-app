@@ -1,505 +1,777 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-        <div class="max-w-4xl mx-auto px-4">
+    <div class="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 py-4 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4">
             <!-- Header -->
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4">
-                    <i class="fas fa-calendar-alt text-white text-2xl"></i>
+            <div class="text-center mb-6 sm:mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full mb-3 sm:mb-4">
+                    <i class="fas fa-calendar-check text-white text-lg sm:text-2xl"></i>
                 </div>
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">Generate Kalender Konten Bisnis</h1>
-                <p class="text-gray-600">Buat kalender konten yang menarik berdasarkan analisa bisnis Anda</p>
+                <h1 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">Kalender Konten Anda</h1>
+                <p class="text-sm sm:text-base text-gray-600 px-4">Konten yang telah disesuaikan dengan analisa bisnis Anda</p>
             </div>
 
-            <!-- Content Calendar Generator Form -->
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <form method="POST" action="{{ route('front.content.generate', $session->id) }}" id="content-calendar-form">
-                    @csrf
-
-                    <!-- Form Header -->
-                    <div class="p-8 md:p-12">
-                        <div class="flex items-center mb-8 pb-6 border-b border-gray-200">
-                            <div class="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4">
-                                <!-- SVG Calendar Icon (Modern, Simple) -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" fill="none"/>
-                                    <path d="M16 3v4M8 3v4M3 9h18" stroke="currentColor"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-800">Generator Kalender Konten</h3>
-                                <p class="text-gray-500">Pilih durasi konten yang ingin Anda buat</p>
-                            </div>
-                        </div>
-
-                        <!-- Days Selection -->
-                        <div class="mb-8">
-                            <label class="block text-gray-700 font-semibold mb-4" for="days">
-                                <i class="fas fa-calendar-day mr-2 text-purple-500"></i>
-                                Pilih Jumlah Hari Konten
-                            </label>
-
-                            <!-- Mobile: Dropdown -->
-                            <div class="block md:hidden">
-                                <select id="days" name="days"
-                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 text-lg">
-                                    @for($i = 1; $i <= 10; $i++)
-                                        <option value="{{ $i }}" {{ $i == 7 ? 'selected' : '' }}>
-                                            {{ $i }} Hari {{ $i == 7 ? '(Recommended)' : '' }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
-
-                            <!-- Desktop: Card Grid -->
-                            <div class="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                @for($i = 1; $i <= 10; $i++)
-                                    <div class="day-option">
-                                        <input type="radio" name="days" value="{{ $i }}" id="day_{{ $i }}"
-                                               class="hidden" {{ $i == 7 ? 'checked' : '' }}>
-                                        <label for="day_{{ $i }}"
-                                               class="day-card block p-4 border-2 border-gray-200 rounded-xl text-center cursor-pointer transition-all duration-300 hover:border-purple-300 hover:shadow-md {{ $i == 7 ? 'border-purple-500 bg-purple-50' : '' }}">
-                                            <div class="text-2xl font-bold text-gray-800 mb-1">{{ $i }}</div>
-                                            <div class="text-sm text-gray-600">Hari</div>
-                                            @if($i == 7)
-                                                <div class="text-xs text-purple-600 font-semibold mt-1">
-                                                    <i class="fas fa-star mr-1"></i>Recommended
-                                                </div>
-                                            @endif
-                                        </label>
-                                    </div>
-                                @endfor
-                            </div>
-
-                            <div class="mt-4 p-4 bg-purple-50 border-l-4 border-purple-500 rounded-r-lg">
-                                <div class="flex items-start">
-                                    <i class="fas fa-info-circle text-purple-500 mr-3 mt-1"></i>
-                                    <div>
-                                        <h4 class="font-semibold text-purple-800 mb-2">Tips Pemilihan Durasi:</h4>
-                                        <ul class="text-purple-700 text-sm space-y-1">
-                                            <li>• <strong>1-3 Hari:</strong> Cocok untuk campaign singkat atau event khusus</li>
-                                            <li>• <strong>7 Hari:</strong> Ideal untuk weekly content planning (Recommended)</li>
-                                            <li>• <strong>10 Hari:</strong> Untuk planning jangka menengah dan strategi komprehensif</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tujuan Pembuatan Konten -->
-                        <div class="mb-8">
-                            <label for="tujuan_pembuatan_konten" class="block text-gray-700 font-semibold mb-4">
-                                <i class="fas fa-bullseye mr-2 text-pink-500"></i>
-                                Tujuan Pembuatan Konten <span class="text-red-500">*</span>
-                            </label>
-                            <textarea id="tujuan_pembuatan_konten" name="tujuan_pembuatan_konten"
-                                      class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100 transition-all duration-300 text-lg resize-none"
-                                      rows="3"
-                                      required
-                                      placeholder="Contoh: Untuk promo paket bundling menu A dan B."></textarea>
-                            <p class="text-gray-500 text-sm mt-2">Jelaskan dengan jelas tujuan Anda membuat kalender konten ini, misal: “Untuk promo paket bundling menu A dan B, atau mengenalkan varian baru pada pelanggan setia.”</p>
-                        </div>
-
-                        <!-- Preview Section -->
-                        <div class="mb-8 p-6 bg-gray-50 rounded-xl">
-                            <h4 class="font-semibold text-gray-800 mb-3">
-                                <i class="fas fa-eye mr-2 text-purple-500"></i>
-                                Yang Akan Anda Dapatkan:
-                            </h4>
-                            <div class="grid sm:grid-cols-2 gap-4">
-                                <div class="flex items-start">
-                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
-                                        <i class="fas fa-check text-green-600 text-sm"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-medium text-gray-800">Konten Harian Terstruktur</h5>
-                                        <p class="text-gray-600 text-sm">Post untuk setiap hari dengan tema yang berbeda</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start">
-                                    <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
-                                        <i class="fas fa-target text-orange-600 text-sm"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-medium text-gray-800">Call-to-Action Ideas</h5>
-                                        <p class="text-gray-600 text-sm">Saran CTA untuk meningkatkan engagement</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="bg-gray-50 px-8 py-6 md:px-12">
-                        <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-lightbulb mr-2"></i>
-                                <span class="text-sm">Kalender akan disesuaikan dengan analisa bisnis Anda</span>
-                            </div>
-                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                                <a href="{{ route('front.result', $session->id) }}"
-                                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300 text-center">
-                                    <i class="fas fa-arrow-left mr-2"></i>Kembali ke Hasil
-                                </a>
-                                <button type="submit" id="generate-btn"
-                                        class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300">
-                                    <i class="fas fa-magic mr-2"></i>Generate Kalender
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Additional Info -->
-            <div class="mt-8 grid md:grid-cols-2 gap-6">
-                <!-- Process Info -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <div class="flex items-start">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4 mt-1">
-                            <i class="fas fa-cogs text-indigo-600"></i>
-                        </div>
+            <!-- Content Plan Info Card -->
+            <div class="mb-6 sm:mb-8">
+                <div class="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
                         <div>
-                            <h4 class="font-semibold text-gray-800 mb-3">Proses Generate</h4>
-                            <ul class="text-gray-600 text-sm space-y-2">
-                                <li class="flex items-start">
-                                    <i class="fas fa-check-circle text-green-500 mr-2 mt-1 flex-shrink-0"></i>
-                                    <span>AI menganalisa hasil diagnosis bisnis Anda</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <i class="fas fa-check-circle text-green-500 mr-2 mt-1 flex-shrink-0"></i>
-                                    <span>Menyesuaikan konten dengan target audience</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <i class="fas fa-check-circle text-green-500 mr-2 mt-1 flex-shrink-0"></i>
-                                    <span>Menghasilkan kalender yang siap digunakan</span>
-                                </li>
-                            </ul>
+                            <h3 class="text-lg sm:text-xl font-semibold mb-1">Plan #{{ $contentPlan->id }}</h3>
+                            <p class="text-sm sm:text-base text-pink-100 mb-2">
+                                Dibuat pada {{ $contentPlan->created_at->format('d F Y') }} - {{ $contentPlan->created_at->format('H:i') }} WIB
+                            </p>
+                            @if($contentPlan->tujuan_pembuatan_konten)
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3 mt-3">
+                                    <p class="text-xs sm:text-sm font-medium">Tujuan: {{ $contentPlan->tujuan_pembuatan_konten }}</p>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
+                            <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                                <div class="text-lg sm:text-xl font-bold">{{ $contentPlan->contentIdeas->count() }}</div>
+                                <div class="text-xs sm:text-sm text-pink-100">Konten</div>
+                            </div>
+                            <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                                <div class="text-lg sm:text-xl font-bold">{{ $contentPlan->days }}</div>
+                                <div class="text-xs sm:text-sm text-pink-100">Hari</div>
+                            </div>
+                            <div class="text-center bg-white bg-opacity-20 rounded-lg px-3 py-2">
+                                <div class="text-sm sm:text-base font-bold">{{ $contentPlan->formatted_cost }}</div>
+                                <div class="text-xs sm:text-sm text-pink-100">Biaya</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 space-y-3 sm:space-y-0">
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                    <a href="{{ route('front.content.history') }}"
+                       class="inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300 text-sm">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Kembali ke Daftar
+                    </a>
+                    <a href="{{ route('front.content.create') }}"
+                       class="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm">
+                        <i class="fas fa-plus mr-2"></i>
+                        Generate Lagi
+                    </a>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="exportToCSV()" class="inline-flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 text-sm">
+                        <i class="fas fa-download mr-2"></i>
+                        Export CSV
+                    </button>
+                    <button onclick="printContent()" class="inline-flex items-center justify-center px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors duration-300 text-sm">
+                        <i class="fas fa-print mr-2"></i>
+                        Print
+                    </button>
+                </div>
+            </div>
 
+            <!-- Filter dan View Toggle -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-3 sm:space-y-0">
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterByPilar('all')" class="filter-btn active px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-300 transition-colors duration-200">
+                        Semua
+                    </button>
+                    <button onclick="filterByPilar('Edukasi')" class="filter-btn px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors duration-200">
+                        Edukasi
+                    </button>
+                    <button onclick="filterByPilar('Interaksi')" class="filter-btn px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium hover:bg-green-200 transition-colors duration-200">
+                        Interaksi
+                    </button>
+                    <button onclick="filterByPilar('Inspirasi')" class="filter-btn px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-200 transition-colors duration-200">
+                        Inspirasi
+                    </button>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="toggleView('timeline')" id="timeline-btn" class="view-btn active px-3 py-1 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors duration-200">
+                        <i class="fas fa-list mr-1"></i>Timeline
+                    </button>
+                    <button onclick="toggleView('grid')" id="grid-btn" class="view-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors duration-200">
+                        <i class="fas fa-th mr-1"></i>Grid
+                    </button>
+                    <button onclick="toggleView('calendar')" id="calendar-btn" class="view-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors duration-200">
+                        <i class="fas fa-calendar mr-1"></i>Kalender
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timeline View (Default) -->
+            <div id="timeline-view" class="content-view">
+                <div class="space-y-4 sm:space-y-6">
+                    @foreach($contentPlan->contentIdeas->sortBy('hari_ke') as $index => $content)
+                        <div class="content-item bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-pilar="{{ $content->pilar_konten }}" data-day="{{ $content->hari_ke }}">
+                            <!-- Timeline Connector -->
+                            @if(!$loop->last)
+                                <div class="absolute left-8 top-20 w-0.5 h-16 bg-gradient-to-b from-pink-300 to-purple-300 z-10 hidden lg:block"></div>
+                            @endif
+
+                            <div class="flex flex-col lg:flex-row">
+                                <!-- Day Indicator -->
+                                <div class="lg:w-24 bg-gradient-to-br from-pink-500 to-purple-600 text-white p-4 lg:p-6 flex flex-row lg:flex-col items-center justify-center text-center relative">
+                                    <div class="absolute top-2 right-2 lg:top-4 lg:right-4">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20 text-white">
+                                            {{ $content->pilar_konten }}
+                                        </span>
+                                    </div>
+                                    <div class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 lg:mb-2">{{ $content->hari_ke }}</div>
+                                    <div class="text-xs sm:text-sm text-pink-100">Hari</div>
+                                    <div class="text-xs text-pink-100 mt-1 lg:mt-2">
+                                        {{ now()->addDays($content->hari_ke - 1)->format('M d') }}
+                                    </div>
+                                </div>
+
+                                <!-- Content Details -->
+                                <div class="flex-1 p-4 sm:p-6">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                                        <div class="flex-1">
+                                            <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2 leading-tight">{{ $content->judul_konten }}</h3>
+                                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                    {{ $content->pilar_konten == 'Edukasi' ? 'bg-blue-100 text-blue-800' : '' }}
+                                                    {{ $content->pilar_konten == 'Interaksi' ? 'bg-green-100 text-green-800' : '' }}
+                                                    {{ $content->pilar_konten == 'Inspirasi' ? 'bg-purple-100 text-purple-800' : '' }}">
+                                                    <i class="fas fa-{{ $content->pilar_konten == 'Edukasi' ? 'graduation-cap' : ($content->pilar_konten == 'Interaksi' ? 'comments' : 'lightbulb') }} mr-1"></i>
+                                                    {{ $content->pilar_konten }}
+                                                </span>
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                                    <i class="fas fa-camera mr-1"></i>
+                                                    {{ $content->rekomendasi_format }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex space-x-2 mt-2 sm:mt-0">
+                                            <button onclick="copyContent({{ $content->id }})" class="p-2 text-gray-500 hover:text-purple-600 transition-colors duration-200" title="Copy konten">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                            <button onclick="toggleExpand({{ $content->id }})" class="p-2 text-gray-500 hover:text-purple-600 transition-colors duration-200" title="Expand/Collapse">
+                                                <i class="fas fa-chevron-down expand-icon" id="icon-{{ $content->id }}"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hook -->
+                                    <div class="mb-4">
+                                        <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-l-4 border-pink-400 p-3 rounded-r-lg">
+                                            <h4 class="text-sm font-semibold text-pink-800 mb-1">🎯 Hook Pembuka:</h4>
+                                            <p class="text-sm text-pink-700 italic">"{{ $content->hook }}"</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Expandable Content -->
+                                    <div id="content-{{ $content->id }}" class="expandable-content hidden">
+                                        <!-- Script Poin Utama -->
+                                        <div class="mb-4">
+                                            <h4 class="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                                <i class="fas fa-list mr-2 text-blue-500"></i>
+                                                Poin-poin Utama:
+                                            </h4>
+                                            <div class="bg-gray-50 rounded-lg p-3">
+                                                @if(is_array($content->script_poin_utama))
+                                                    <ul class="space-y-2">
+                                                        @foreach($content->script_poin_utama as $poin)
+                                                            <li class="flex items-start">
+                                                                <span class="inline-block w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                                                <span class="text-sm text-gray-700">{{ $poin }}</span>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="text-sm text-gray-700">{{ $content->script_poin_utama }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <!-- Call to Action -->
+                                        <div class="mb-4">
+                                            <h4 class="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                                <i class="fas fa-bullhorn mr-2 text-orange-500"></i>
+                                                Call to Action:
+                                            </h4>
+                                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                                <p class="text-sm text-orange-800 font-medium">{{ $content->call_to_action }}</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Format Rekomendasi -->
+                                        <div class="flex flex-wrap gap-2">
+                                            <div class="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2 text-center">
+                                                <div class="text-xs text-indigo-600 font-medium">Format</div>
+                                                <div class="text-sm text-indigo-800">{{ $content->rekomendasi_format }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Actions -->
+                                    <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                                        <button onclick="showContentPreview({{ $content->id }})" class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors duration-200">
+                                            <i class="fas fa-eye mr-1"></i>Preview
+                                        </button>
+                                        <button onclick="schedulePost({{ $content->id }})" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200">
+                                            <i class="fas fa-calendar-plus mr-1"></i>Jadwalkan
+                                        </button>
+                                        <button onclick="editContent({{ $content->id }})" class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200 transition-colors duration-200">
+                                            <i class="fas fa-edit mr-1"></i>Edit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="grid-view" class="content-view hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    @foreach($contentPlan->contentIdeas->sortBy('hari_ke') as $content)
+                        <div class="content-item bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-pilar="{{ $content->pilar_konten }}" data-day="{{ $content->hari_ke }}">
+                            <!-- Card Header -->
+                            <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-4 text-white">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                                            <span class="font-bold text-lg">{{ $content->hari_ke }}</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm text-pink-100">Hari {{ $content->hari_ke }}</div>
+                                            <div class="text-xs text-pink-200">{{ now()->addDays($content->hari_ke - 1)->format('d M Y') }}</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">{{ $content->pilar_konten }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Card Content -->
+                            <div class="p-4">
+                                <h3 class="font-bold text-gray-800 mb-2 text-sm leading-tight">{{ Str::limit($content->judul_konten, 60) }}</h3>
+                                <p class="text-xs text-gray-600 mb-3 italic">"{{ Str::limit($content->hook, 80) }}"</p>
+
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{{ $content->rekomendasi_format }}</span>
+                                    <button onclick="toggleExpand({{ $content->id }})" class="text-purple-600 hover:text-purple-800 transition-colors duration-200">
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendar-view" class="content-view hidden">
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                    <div id="content-calendar" class="calendar-container">
+                        <!-- Calendar akan di-generate oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="mt-8 bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2 text-purple-500"></i>
+                    Ringkasan Konten
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                        <div class="text-xl sm:text-2xl font-bold text-blue-600 mb-1">
+                            {{ $contentPlan->contentIdeas->where('pilar_konten', 'Edukasi')->count() }}
+                        </div>
+                        <div class="text-xs sm:text-sm text-gray-600">Edukasi</div>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <div class="text-xl sm:text-2xl font-bold text-green-600 mb-1">
+                            {{ $contentPlan->contentIdeas->where('pilar_konten', 'Interaksi')->count() }}
+                        </div>
+                        <div class="text-xs sm:text-sm text-gray-600">Interaksi</div>
+                    </div>
+                    <div class="text-center p-3 bg-purple-50 rounded-lg">
+                        <div class="text-xl sm:text-2xl font-bold text-purple-600 mb-1">
+                            {{ $contentPlan->contentIdeas->where('pilar_konten', 'Inspirasi')->count() }}
+                        </div>
+                        <div class="text-xs sm:text-sm text-gray-600">Inspirasi</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-xl sm:text-2xl font-bold text-gray-600 mb-1">
+                            {{ $contentPlan->contentIdeas->count() }}
+                        </div>
+                        <div class="text-xs sm:text-sm text-gray-600">Total</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Loading Modal for Content Calendar Generation -->
-    <div id="calendar-generation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
-            <div class="mb-6">
-                <div class="w-16 h-16 mx-auto mb-4">
-                    <div class="calendar-loading-spinner"></div>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Membuat Kalender Konten</h3>
-                <p class="text-gray-600 text-sm">AI sedang menyusun konten yang menarik untuk bisnis Anda...</p>
+    <!-- Content Preview Modal -->
+    <div id="content-preview-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Preview Konten</h3>
+                <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div class="calendar-loading-progress bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full"></div>
+            <div id="preview-content">
+                <!-- Content will be loaded here -->
             </div>
-            <div class="text-xs text-gray-500" id="calendar-progress-text">Menganalisa bisnis Anda...</div>
         </div>
     </div>
 
     <style>
-        /* Custom styles for day selection cards */
-        .day-option input[type="radio"]:checked + .day-card {
-            border-color: #8b5cf6;
-            background-color: #faf5ff;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-
-        .day-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .day-option input[type="radio"]:checked + .day-card .text-gray-800 {
-            color: #7c3aed;
-        }
-
-        .day-option input[type="radio"]:checked + .day-card .text-gray-600 {
-            color: #8b5cf6;
-        }
-
-        /* Loading state */
-        .loading {
-            position: relative;
+        .expandable-content {
+            max-height: 0;
             overflow: hidden;
+            transition: max-height 0.3s ease-out;
         }
 
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: loading 1.5s infinite;
+        .expandable-content.show {
+            max-height: 1000px;
         }
 
-        @keyframes loading {
-            0% { left: -100%; }
-            100% { left: 100%; }
+        .expand-icon {
+            transition: transform 0.3s ease;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .day-card {
-                padding: 1rem;
-            }
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
 
-            .text-4xl {
-                font-size: 2.5rem;
-            }
+        .filter-btn.active {
+            background-color: #8b5cf6 !important;
+            color: white !important;
+        }
 
-            .p-8 {
-                padding: 1.5rem;
-            }
+        .view-btn.active {
+            background-color: #ec4899 !important;
+            color: white !important;
+        }
 
-            .md\:p-12 {
-                padding: 1.5rem;
-            }
+        .content-item {
+            transition: all 0.3s ease;
+        }
+
+        .content-item.hidden {
+            display: none;
+        }
+
+        .calendar-container {
+            min-height: 400px;
+        }
+
+        .calendar-day {
+            border: 1px solid #e5e7eb;
+            min-height: 120px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background-color: #f9fafb;
+        }
+
+        .calendar-day.has-content {
+            background-color: #fef3ff;
+            border-color: #d8b4fe;
+        }
+
+        .calendar-content {
+            font-size: 0.75rem;
+            line-height: 1.2;
         }
 
         @media (max-width: 640px) {
-            .text-4xl {
-                font-size: 2rem;
+            .calendar-day {
+                min-height: 80px;
+                padding: 4px;
             }
-
-            .px-8 {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-
-            .py-6 {
-                padding-top: 1rem;
-                padding-bottom: 1rem;
-            }
-        }
-
-        /* Loading Modal for Calendar Generation */
-        #calendar-generation-modal {
-            backdrop-filter: blur(4px);
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        #calendar-generation-modal.show {
-            opacity: 1 !important;
-            visibility: visible !important;
-        }
-
-        /* Calendar Loading Spinner */
-        .calendar-loading-spinner {
-            width: 64px;
-            height: 64px;
-            border: 4px solid #e5e7eb;
-            border-top: 4px solid #8b5cf6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Calendar Loading Progress Bar */
-        .calendar-loading-progress {
-            width: 0%;
-            transition: width 4s ease-in-out;
-        }
-
-        /* Modal Animation */
-        #calendar-generation-modal.show .bg-white {
-            animation: modalBounce 0.5s ease-out;
-        }
-
-        @keyframes modalBounce {
-            0% {
-                transform: scale(0.3) translateY(-50px);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.05) translateY(0);
-                opacity: 0.8;
-            }
-            100% {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* Pulse effect untuk calendar spinner */
-        .calendar-loading-spinner::after {
-            content: '';
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            width: 72px;
-            height: 72px;
-            border: 2px solid rgba(139, 92, 246, 0.2);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1.2);
-                opacity: 0;
-            }
-        }
-
-        /* Calendar icon animation in spinner */
-        .calendar-loading-spinner::before {
-            content: '\f073';
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #8b5cf6;
-            font-size: 20px;
-            animation: bounce 1s ease-in-out infinite alternate;
-        }
-
-        @keyframes bounce {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-50%, -50%) scale(1.1); }
         }
     </style>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('content-calendar-form');
-            const generateBtn = document.getElementById('generate-btn');
-            const dayOptions = document.querySelectorAll('input[name="days"]');
-            const mobileSelect = document.getElementById('days');
+        // Global variables
+        let currentView = 'timeline';
+        let currentFilter = 'all';
+        const contentData = @json($contentPlan->contentIdeas);
 
-            // Function to show calendar generation modal
-            function showCalendarGenerationModal() {
-                const modal = document.getElementById('calendar-generation-modal');
-                const progressBar = modal.querySelector('.calendar-loading-progress');
-                const progressText = document.getElementById('calendar-progress-text');
+        // Toggle expand/collapse content
+        function toggleExpand(contentId) {
+            const content = document.getElementById(`content-${contentId}`);
+            const icon = document.getElementById(`icon-${contentId}`);
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                content.classList.add('show');
+                icon.classList.add('rotated');
+            } else {
+                content.classList.add('hidden');
+                content.classList.remove('show');
+                icon.classList.remove('rotated');
+            }
+        }
+
+        // Filter content by pilar
+        function filterByPilar(pilar) {
+            const items = document.querySelectorAll('.content-item');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Filter items
+            items.forEach(item => {
+                const itemPilar = item.getAttribute('data-pilar');
+                if (pilar === 'all' || itemPilar === pilar) {
+                    item.style.display = '';
+                    item.classList.remove('hidden');
+                } else {
+                    item.style.display = 'none';
+                    item.classList.add('hidden');
+                }
+            });
+
+            currentFilter = pilar;
+        }
+
+        // Toggle view mode
+        function toggleView(view) {
+            const views = ['timeline', 'grid', 'calendar'];
+            const buttons = document.querySelectorAll('.view-btn');
+
+            // Hide all views
+            views.forEach(v => {
+                document.getElementById(`${v}-view`).classList.add('hidden');
+                document.getElementById(`${v}-btn`).classList.remove('active');
+            });
+
+            // Show selected view
+            document.getElementById(`${view}-view`).classList.remove('hidden');
+            document.getElementById(`${view}-btn`).classList.add('active');
+
+            currentView = view;
+
+            // Generate calendar if calendar view is selected
+            if (view === 'calendar') {
+                generateCalendar();
+            }
+        }
+
+        // Generate calendar view
+        function generateCalendar() {
+            const calendarContainer = document.getElementById('content-calendar');
+            const startDate = new Date();
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+            let calendarHTML = '<div class="grid grid-cols-7 gap-1 mb-4">';
+
+            // Header days
+            days.forEach(day => {
+                calendarHTML += `<div class="text-center font-semibold text-gray-700 p-2">${day}</div>`;
+            });
+
+            // Calendar days
+            for (let i = 1; i <= {{ $contentPlan->days }}; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i - 1);
+
+                const content = contentData.find(c => c.hari_ke === i);
+                const hasContent = content ? 'has-content' : '';
+
+                calendarHTML += `
+                    <div class="calendar-day ${hasContent}" onclick="showCalendarContent(${i})">
+                        <div class="font-semibold text-gray-800">${i}</div>
+                        <div class="text-xs text-gray-500">${currentDate.toLocaleDateString('id-ID', {month: 'short', day: 'numeric'})}</div>
+                        ${content ? `
+                            <div class="calendar-content mt-1">
+                                <div class="text-xs font-medium text-purple-700 truncate">${content.judul_konten}</div>
+                                <div class="text-xs text-gray-600">${content.pilar_konten}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            calendarHTML += '</div>';
+            calendarContainer.innerHTML = calendarHTML;
+        }
+
+        // Show content for specific calendar day
+        function showCalendarContent(day) {
+            const content = contentData.find(c => c.hari_ke === day);
+            if (content) {
+                showContentPreview(content.id);
+            }
+        }
+
+        // Copy content to clipboard
+        function copyContent(contentId) {
+            const content = contentData.find(c => c.id === contentId);
+            if (content) {
+                const textToCopy = `
+${content.judul_konten}
+
+Hook: ${content.hook}
+
+Poin Utama:
+${Array.isArray(content.script_poin_utama) ? content.script_poin_utama.map(p => `• ${p}`).join('\n') : content.script_poin_utama}
+
+CTA: ${content.call_to_action}
+
+Format: ${content.rekomendasi_format}
+                `.trim();
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showNotification('Konten berhasil disalin!', 'success');
+                }).catch(() => {
+                    showNotification('Gagal menyalin konten', 'error');
+                });
+            }
+        }
+        // Show content preview modal
+        function showContentPreview(contentId) {
+            const content = contentData.find(c => c.id === contentId);
+            if (content) {
+                const modal = document.getElementById('content-preview-modal');
+                const previewContent = document.getElementById('preview-content');
+
+                previewContent.innerHTML = `
+                <div class="space-y-4">
+                    <div class="border-b pb-4">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">${content.judul_konten}</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">${content.pilar_konten}</span>
+                            <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">${content.rekomendasi_format}</span>
+                            <span class="px-2 py-1 text-xs rounded-full bg-pink-100 text-pink-800">Hari ${content.hari_ke}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-l-4 border-pink-400 p-4 rounded-r-lg">
+                        <h5 class="font-semibold text-pink-800 mb-2">🎯 Hook Pembuka:</h5>
+                        <p class="text-pink-700 italic">"${content.hook}"</p>
+                    </div>
+
+                    <div>
+                        <h5 class="font-semibold text-gray-800 mb-2">📝 Poin-poin Utama:</h5>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            ${Array.isArray(content.script_poin_utama)
+                    ? content.script_poin_utama.map(poin => `<p class="mb-2">• ${poin}</p>`).join('')
+                    : `<p>${content.script_poin_utama}</p>`
+                }
+                        </div>
+                    </div>
+
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-orange-800 mb-2">📢 Call to Action:</h5>
+                        <p class="text-orange-700 font-medium">${content.call_to_action}</p>
+                    </div>
+
+                    <div class="flex justify-end space-x-2">
+                        <button onclick="copyContent(${content.id})" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200">
+                            <i class="fas fa-copy mr-2"></i>Copy Konten
+                        </button>
+                        <button onclick="editContent(${content.id})" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
+                            <i class="fas fa-edit mr-2"></i>Edit
+                        </button>
+                    </div>
+                </div>
+            `;
 
                 modal.classList.remove('hidden');
-
-                // Force reflow
-                modal.offsetHeight;
-
-                modal.classList.add('show');
-
-                // Prevent scrolling
                 document.body.style.overflow = 'hidden';
+            }
+        }
 
-                // Animate progress bar
+        // Close preview modal
+        function closePreviewModal() {
+            const modal = document.getElementById('content-preview-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Schedule post (placeholder function)
+        function schedulePost(contentId) {
+            showNotification('Fitur jadwal posting akan segera hadir!', 'info');
+        }
+
+        // Edit content (placeholder function)
+        function editContent(contentId) {
+            showNotification('Fitur edit konten akan segera hadir!', 'info');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const csvContent = [
+                ['Hari', 'Judul Konten', 'Pilar Konten', 'Hook', 'Poin Utama', 'CTA', 'Format'],
+                ...contentData.map(content => [
+                    content.hari_ke,
+                    content.judul_konten,
+                    content.pilar_konten,
+                    content.hook,
+                    Array.isArray(content.script_poin_utama) ? content.script_poin_utama.join('; ') : content.script_poin_utama,
+                    content.call_to_action,
+                    content.rekomendasi_format
+                ])
+            ];
+
+            const csvString = csvContent.map(row =>
+                row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `kalender-konten-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification('File CSV berhasil diunduh!', 'success');
+        }
+
+        // Print content
+        function printContent() {
+            const printWindow = window.open('', '_blank');
+            const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Kalender Konten - Plan #{{ $contentPlan->id }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .content-item { margin-bottom: 30px; page-break-inside: avoid; }
+                    .day-header { background: #8b5cf6; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                    .content-section { margin-bottom: 15px; }
+                    .hook { background: #fef3ff; border-left: 4px solid #ec4899; padding: 15px; margin-bottom: 15px; }
+                    .poin-utama { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                    .cta { background: #fef3cd; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; }
+                    ul { margin: 10px 0; padding-left: 20px; }
+                    @media print { .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Kalender Konten Bisnis</h1>
+                    <p>Plan #{{ $contentPlan->id }} - {{ $contentPlan->created_at->format('d F Y') }}</p>
+                    ${contentPlan.tujuan_pembuatan_konten ? `<p><strong>Tujuan:</strong> {{ $contentPlan->tujuan_pembuatan_konten }}</p>` : ''}
+                </div>
+
+                ${contentData.map(content => `
+                    <div class="content-item">
+                        <div class="day-header">
+                            <h2>Hari ${content.hari_ke} - ${content.judul_konten}</h2>
+                            <p>Pilar: ${content.pilar_konten} | Format: ${content.rekomendasi_format}</p>
+                        </div>
+
+                        <div class="hook">
+                            <h3>🎯 Hook Pembuka:</h3>
+                            <p><em>"${content.hook}"</em></p>
+                        </div>
+
+                        <div class="poin-utama">
+                            <h3>📝 Poin-poin Utama:</h3>
+                            ${Array.isArray(content.script_poin_utama)
+                ? `<ul>${content.script_poin_utama.map(poin => `<li>${poin}</li>`).join('')}</ul>`
+                : `<p>${content.script_poin_utama}</p>`
+            }
+                        </div>
+
+                        <div class="cta">
+                            <h3>📢 Call to Action:</h3>
+                            <p><strong>${content.call_to_action}</strong></p>
+                        </div>
+                    </div>
+                `).join('')}
+            </body>
+            </html>
+        `;
+
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                    type === 'error' ? 'bg-red-500' :
+                        type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            }`;
+            notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+            document.body.appendChild(notification);
+
+            // Show notification
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(full)';
                 setTimeout(() => {
-                    progressBar.style.width = '95%';
-                }, 100);
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
 
-                // Update progress text with different messages
-                const messages = [
-                    'Menganalisa bisnis Anda...',
-                    'Menyusun ide konten...',
-                    'Membuat strategi posting...',
-                    'Mengoptimalkan engagement...',
-                    'Finalizing kalender...'
-                ];
-
-                let messageIndex = 0;
-                const messageInterval = setInterval(() => {
-                    if (messageIndex < messages.length) {
-                        progressText.textContent = messages[messageIndex];
-                        messageIndex++;
-                    } else {
-                        clearInterval(messageInterval);
-                    }
-                }, 800);
-
-                // Prevent modal close
-                modal.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                });
-            }
-
-            // Sync mobile select with desktop radio buttons
-            if (mobileSelect) {
-                mobileSelect.addEventListener('change', function() {
-                    const selectedValue = this.value;
-                    dayOptions.forEach(option => {
-                        option.checked = option.value === selectedValue;
-                    });
-                });
-            }
-
-            // Sync desktop radio buttons with mobile select
-            dayOptions.forEach(option => {
-                option.addEventListener('change', function() {
-                    if (this.checked && mobileSelect) {
-                        mobileSelect.value = this.value;
-                    }
-                });
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close modal when clicking outside
+            document.getElementById('content-preview-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePreviewModal();
+                }
             });
 
-            // Form submission with loading state
-            form.addEventListener('submit', function(e) {
-                // Get selected days for personalized message
-                const selectedDays = document.querySelector('input[name="days"]:checked').value;
-
-                // Show loading modal
-                showCalendarGenerationModal();
-
-                // Update button state
-                generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
-                generateBtn.disabled = true;
-                generateBtn.classList.add('opacity-75');
-
-                // Add loading class to form
-                form.classList.add('loading');
-
-                console.log('Generating calendar for ' + selectedDays + ' days');
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closePreviewModal();
+                }
             });
 
-            // Add hover effects for mobile
-            if (window.innerWidth <= 768) {
-                mobileSelect.addEventListener('focus', function() {
-                    this.classList.add('ring-4', 'ring-purple-100');
-                });
+            // Add smooth scroll behavior
+            document.documentElement.style.scrollBehavior = 'smooth';
 
-                mobileSelect.addEventListener('blur', function() {
-                    this.classList.remove('ring-4', 'ring-purple-100');
-                });
-            }
+            // Add intersection observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
 
-            // Add smooth interactions for day cards
-            const dayCards = document.querySelectorAll('.day-card');
-            dayCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    if (!this.previousElementSibling.checked) {
-                        this.style.transform = 'translateY(-2px)';
-                        this.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.15)';
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
                     }
                 });
+            }, observerOptions);
 
-                card.addEventListener('mouseleave', function() {
-                    if (!this.previousElementSibling.checked) {
-                        this.style.transform = 'translateY(0)';
-                        this.style.boxShadow = '';
-                    }
-                });
+            // Observe content items for scroll animation
+            document.querySelectorAll('.content-item').forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+                observer.observe(el);
             });
         });
     </script>

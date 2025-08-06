@@ -70,7 +70,7 @@
                             <a href="{{ route('front.result', $session->id) }}" class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg font-semibold hover:from-gray-600 hover:to-gray-700 transition-all duration-300 text-center text-sm sm:text-base">
                                 <i class="fas fa-arrow-left mr-2"></i>Kembali ke Hasil Awal
                             </a>
-                            <a href="{{ route('front.content.form', $session->id) }}"
+                            <a href="{{ route('front.content.create') }}"
                                class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 text-center text-sm sm:text-base">
                                 <i class="fas fa-magic mr-2"></i>Buat Konten
                             </a>

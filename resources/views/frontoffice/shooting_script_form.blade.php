@@ -187,11 +187,11 @@
 
                     <!-- Submit Button -->
                     <div class="flex flex-col sm:flex-row justify-between items-center pt-4 sm:pt-6 border-t border-gray-200 space-y-3 sm:space-y-0">
-                        <a href="{{ route('front.content.form', $session->id) }}"
-                           class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-all duration-300 text-sm sm:text-base">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Kembali ke Kalender
-                        </a>
+{{--                        <a href="{{ route('front.content.history', $session->id) }}"--}}
+{{--                           class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-all duration-300 text-sm sm:text-base">--}}
+{{--                            <i class="fas fa-arrow-left mr-2"></i>--}}
+{{--                            Kembali ke Kalender--}}
+{{--                        </a>--}}
                         <button type="submit"
                                 class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-bold hover:from-orange-600 hover:to-red-700 transform hover:scale-105 transition-all duration-300 shadow-lg text-sm sm:text-base">
                             <i class="fas fa-magic mr-2"></i>

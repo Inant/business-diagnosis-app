@@ -199,10 +199,12 @@
 {{--                           class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 text-center">--}}
 {{--                            <i class="fas fa-sync-alt mr-2"></i>Generate Ulang--}}
 {{--                        </a>--}}
-                        <a href="{{ route('front.content.form', $session->id) }}"
-                           class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-all duration-300 text-center">
-                            <i class="fas fa-arrow-left mr-2"></i>Kembali
-                        </a>
+                        @if(isset($contentIdea->content_plan_id))
+                            <a href="{{ route('front.content.detail', $contentIdea->content_plan_id) }}"
+                               class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-all duration-300 text-center">
+                                <i class="fas fa-arrow-left mr-2"></i>Kembali ke Konten
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

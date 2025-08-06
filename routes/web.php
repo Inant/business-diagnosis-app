@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Backoffice\QuestionController;
 use App\Http\Controllers\Frontoffice\FormController;
+use App\Http\Controllers\Frontoffice\AdsController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'admin'])->prefix('backoffice')->group(function () {
 
 //USER
 Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
+    Route::get('/dashboard', [FormController::class, 'dashboard'])->name('front.dashboard');
     //analisa awal
     Route::get('form', [FormController::class, 'showForm'])->name('front.form');
     Route::post('form', [FormController::class, 'submitForm'])->name('front.form.submit');
@@ -47,22 +49,38 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
     Route::get('swot/{session}', [FormController::class, 'showSwotForm'])->name('front.swot.form');
     Route::post('swot/{session}', [FormController::class, 'submitSwot'])->name('front.swot.submit');
 
-    // Content plan
-    Route::get('content-plan/{session}', [FormController::class, 'showContentPlanForm'])->name('front.content.form');
-    Route::post('content-plan/{session}', [FormController::class, 'generateContentPlan'])->name('front.content.generate');
+    Route::get('/content-history', [FormController::class, 'contentHistory'])->name('front.content.history');
+    Route::get('/content/create', [FormController::class, 'showContentPlanForm'])->name('front.content.create');
+    Route::post('/content/generate', [FormController::class, 'generateContentPlan'])->name('front.content.generate');
+    Route::get('/content/{contentPlanId}', [FormController::class, 'showContentDetail'])->name('front.content.detail');
 
     //shooting script
     Route::get('shooting-script/{contentIdea}', [FormController::class, 'showShootingScriptForm'])->name('front.shooting.form');
     Route::post('shooting-script/{contentIdea}', [FormController::class, 'generateShootingScript'])->name('front.shooting.generate');
 
-    // Generate iklan
-        // Form
-    Route::get('/session/{session}/ads', [FormController::class, 'showAdsForm'])->name('front.ads.form');
-        // Proses Generate
-    Route::post('/session/{session}/ads/generate', [FormController::class, 'generateAds'])->name('front.ads.generate');
+    // Ads generation routes
+    Route::get('/ads-history', [AdsController::class, 'adsHistory'])->name('front.ads.history');
+    Route::get('/ads/create', [AdsController::class, 'showAdsForm'])->name('front.ads.create');
+    Route::post('/ads/generate', [AdsController::class, 'generateAds'])->name('front.ads.generate');
+    Route::get('/ads/{adsPlanId}', [AdsController::class, 'showAdsDetail'])->name('front.ads.detail');
 
-    // History analisa
-    Route::get('history', [FormController::class, 'history'])->name('front.history');
+    // Backward compatibility
+    Route::get('/ads/{session_id}', function($session_id) {
+        return redirect()->route('front.ads.create');
+    })->name('front.ads.form');
+
+    Route::post('/ads/{session_id}', function($session_id) {
+        return redirect()->route('front.ads.generate');
+    })->name('front.ads.store');
+
+//    // Generate iklan
+//        // Form
+//    Route::get('/session/{session}/ads', [FormController::class, 'showAdsForm'])->name('front.ads.form');
+//        // Proses Generate
+//    Route::post('/session/{session}/ads/generate', [FormController::class, 'generateAds'])->name('front.ads.generate');
+//
+//    // History analisa
+//    Route::get('history', [FormController::class, 'history'])->name('front.history');
 });
 
 

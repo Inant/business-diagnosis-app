@@ -97,10 +97,10 @@
                                             <i class="fas fa-coins mr-2 text-yellow-500"></i>
                                             <span>{{ $contentPlan->formatted_cost }}</span>
                                         </div>
-                                        <div class="flex items-center text-gray-600 text-xs sm:text-sm mb-2">
-                                            <i class="fas fa-clock mr-2 text-blue-500"></i>
-                                            <span>{{ $contentPlan->response_time_ms }}ms response</span>
-                                        </div>
+{{--                                        <div class="flex items-center text-gray-600 text-xs sm:text-sm mb-2">--}}
+{{--                                            <i class="fas fa-clock mr-2 text-blue-500"></i>--}}
+{{--                                            <span>{{ $contentPlan->response_time_ms }}ms response</span>--}}
+{{--                                        </div>--}}
                                         <div class="flex items-center text-gray-600 text-xs sm:text-sm">
                                             <i class="fas fa-history mr-2 text-gray-400"></i>
                                             <span>{{ $contentPlan->created_at->diffForHumans() }}</span>

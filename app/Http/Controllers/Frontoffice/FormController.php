@@ -398,42 +398,7 @@ EOP;
     {
         $user = auth()->user();
 
-        // Jika ada session_id, ini adalah route lama
-        if ($session_id) {
-            $session = UserSession::findOrFail($session_id);
-
-            // Cek apakah ini request untuk melihat hasil yang sudah ada
-            if (request()->has('show_result')) {
-                $contentPlan = AiResponse::where('user_session_id', $session_id)
-                    ->where('step', 'content_plan')
-                    ->latest()
-                    ->first();
-
-                if ($contentPlan) {
-                    $contentIdeas = ContentIdea::where('user_session_id', $session_id)
-                        ->orderBy('hari_ke')
-                        ->get();
-
-                    return view('frontoffice.content_plan_result', compact('session', 'contentIdeas', 'contentPlan'));
-                }
-            }
-
-            // Cek apakah sudah ada diagnosis dan SWOT
-            $diagnosis = AiResponse::where('user_session_id', $session_id)->where('step', 'diagnosis')->first();
-            $swot = AiResponse::where('user_session_id', $session_id)->where('step', 'swot')->first();
-
-            if (!$diagnosis) {
-                return redirect()->route('front.form')->with('error', 'Silakan lengkapi analisa bisnis terlebih dahulu');
-            }
-
-            if (!$swot) {
-                return redirect()->route('front.swot.form', $session_id)->with('error', 'Silakan lengkapi analisa SWOT terlebih dahulu');
-            }
-
-            return view('frontoffice.content_plan_form', compact('session'));
-        }
-
-        // Route baru - ambil sesi utama user
+        // Ambil sesi utama user
         $session = UserSession::where('user_id', $user->id)->first();
         if (!$session) {
             return redirect()->route('front.form')->with('info', 'Silakan lengkapi analisa bisnis terlebih dahulu');

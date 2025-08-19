@@ -21,7 +21,7 @@
                         class="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
                         <div>
                             @if(isset($contentPlan) && is_object($contentPlan))
-                                <h3 class="text-lg sm:text-xl font-semibold mb-1">Plan #{{ $contentPlan->id }}</h3>
+                                <h3 class="text-lg sm:text-xl font-semibold mb-1">Konten Plan</h3>
                                 <p class="text-sm sm:text-base text-pink-100 mb-2">
                                     Dibuat pada {{ $contentPlan->created_at->format('d F Y') }}
                                     - {{ $contentPlan->created_at->format('H:i') }} WIB

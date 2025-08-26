@@ -100,9 +100,18 @@ class ImageGenService
 
             if ($b64) {
                 $binary   = base64_decode($b64);
-                $filename = 'generated/' . Str::uuid()->toString() . '.png';
-                Storage::disk('public')->put($filename, $binary, ['visibility' => 'public']);
-                return asset('storage/' . $filename);
+
+                // simpan langsung ke public/generated/
+                $dir = public_path('generated');
+                if (! is_dir($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+
+                $filename = Str::uuid()->toString().'.png';
+                file_put_contents($dir.'/'.$filename, $binary);
+
+                // URL publik langsung
+                return asset('generated/'.$filename);
             }
 
             return null;

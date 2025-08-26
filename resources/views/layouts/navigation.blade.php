@@ -31,8 +31,8 @@
                                 <div x-show="openGen" @click.away="openGen = false"
                                      class="absolute left-0 mt-2 w-56 bg-white text-gray-900 rounded shadow-lg py-2 z-50"
                                      x-transition>
-                                    <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Foto Product</a>
-                                    <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Social Media Post</a>
+                                    <a href="{{route('social-media-image-generator.index')}}" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Social Media Post</a>
+                                    <a href="{{route('foto-product.index')}}" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Foto Product</a>
                                     <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Prompt Generator VEO3</a>
                                 </div>
                             </div>
@@ -94,8 +94,8 @@
                             </svg>
                         </button>
                         <div x-show="openGenMobile" class="pl-4" x-transition>
-                            <a href="https://product-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Foto Product</a>
-                            <a href="https://social-media-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Social Media Post</a>
+                            <a href="{{route('foto-product.index')}}" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Foto Product</a>
+                            <a href="{{route('social-media-image-generator.index')}}" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Social Media Post</a>
                             <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Prompt Generator VEO3</a>
                         </div>
                     </div>

@@ -5,7 +5,10 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Backoffice\QuestionController;
 use App\Http\Controllers\Frontoffice\FormController;
+use App\Http\Controllers\Frontoffice\GeneratorController;
 use App\Http\Controllers\Frontoffice\AdsController;
+use App\Http\Controllers\Frontoffice\SocialMediaImageGeneratorController;
+use App\Http\Controllers\Frontoffice\FotoProductController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -73,6 +76,23 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
         return redirect()->route('front.ads.generate');
     })->name('front.ads.store');
 
+    Route::get('/generator/social-media-image-generator', [SocialMediaImageGeneratorController::class, 'index'])
+        ->name('social-media-image-generator.index');
+
+    Route::post('/generator/social-media-image-generator', [SocialMediaImageGeneratorController::class, 'generate'])
+        ->name('social-media-image-generator.generate')->middleware('long.request');
+
+    Route::get(
+        '/generator/social-media-image-generator/download',
+        [SocialMediaImageGeneratorController::class, 'download']
+    )->name('social-media-image-generator.download');
+
+    Route::get('/generator/foto-product', [FotoProductController::class, 'index'])
+        ->name('foto-product.index');
+
+    Route::post('/generator/foto-product', [FotoProductController::class, 'generate'])
+        ->name('foto-product.generate')->middleware('long.request');
+
 //    // Generate iklan
 //        // Form
 //    Route::get('/session/{session}/ads', [FormController::class, 'showAdsForm'])->name('front.ads.form');
@@ -91,6 +111,12 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/backoffice', [BackofficeController::class, 'index'])->name('backoffice.dashboard');
 });
+
+//Route::get('frontoffice/social-media-post', [GeneratorController::class, 'socialMediaPost'])->name('front.social-media-post');
+
+//Route::get('frontoffice/veo3', [GeneratorController::class, 'veo3'])->name('front.veo3');
+
+
 
 
 require __DIR__.'/auth.php';

@@ -110,8 +110,8 @@ class ImageGenService
                 $filename = Str::uuid()->toString().'.png';
                 file_put_contents($dir.'/'.$filename, $binary);
 
-                // URL publik langsung
-                return asset('generated/'.$filename);
+                $prefix = 'public/'; // kosongkan '' kalau nanti web root sudah diarahkan ke /public
+                return url($prefix.'generated/'.$filename);
             }
 
             return null;

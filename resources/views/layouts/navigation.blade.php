@@ -34,6 +34,7 @@
                                     <a href="{{route('social-media-image-generator.index')}}" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Social Media Post</a>
                                     <a href="{{route('foto-product.index')}}" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Generator Foto Product</a>
                                     <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Prompt Generator VEO3</a>
+                                    <a href="{{route('landing-page.index')}}" target="_blank" class="block px-4 py-2 hover:bg-gray-100">Landing Page Prompt Generator</a>
                                 </div>
                             </div>
                         @endif
@@ -97,6 +98,7 @@
                             <a href="{{route('foto-product.index')}}" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Foto Product</a>
                             <a href="{{route('social-media-image-generator.index')}}" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Generator Social Media Post</a>
                             <a href="https://veo3-prompt-generator.primtechdev.com/" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Prompt Generator VEO3</a>
+                            <a href="{{route('landing-page.index')}}" target="_blank" class="block py-2 px-2 rounded hover:bg-gray-700 hover:text-blue-400">Landing Page Prompt Generator</a>
                         </div>
                     </div>
                 @endif

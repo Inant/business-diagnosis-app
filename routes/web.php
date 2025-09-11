@@ -9,6 +9,7 @@ use App\Http\Controllers\Frontoffice\GeneratorController;
 use App\Http\Controllers\Frontoffice\AdsController;
 use App\Http\Controllers\Frontoffice\SocialMediaImageGeneratorController;
 use App\Http\Controllers\Frontoffice\FotoProductController;
+use App\Http\Controllers\Frontoffice\LandingPageController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -92,6 +93,10 @@ Route::middleware(['auth'])->prefix('frontoffice')->group(function () {
 
     Route::post('/generator/foto-product', [FotoProductController::class, 'generate'])
         ->name('foto-product.generate')->middleware('long.request');
+
+    Route::get('/generator/landing-page', [LandingPageController::class, 'index'])
+        ->name('landing-page.index');
+
 
 //    // Generate iklan
 //        // Form
